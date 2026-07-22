@@ -16,6 +16,9 @@ export function buildAuthorizeUrl(state: string, redirectUri: string): string {
     client_id: requireEnv("YAHOO_CLIENT_ID"),
     redirect_uri: redirectUri,
     response_type: "code",
+    // Yahoo's app dashboard no longer has a "Fantasy Sports" permission checkbox —
+    // read access has to be requested explicitly here instead.
+    scope: "fspt-r",
     state,
   });
   return `${AUTH_URL}?${params.toString()}`;
