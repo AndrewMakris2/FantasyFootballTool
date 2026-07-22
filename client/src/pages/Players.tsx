@@ -13,6 +13,9 @@ export function Players() {
   const [position, setPosition] = useState("ALL");
   const [team, setTeam] = useState("ALL");
   const [format, setFormat] = useState<RankingFormat>("full");
+  const [health, setHealth] = useState("ALL");
+  const [rookiesOnly, setRookiesOnly] = useState(false);
+  const [rankedOnly, setRankedOnly] = useState(false);
 
   const { dynasty, ppr } = FORMAT_PARAMS[format];
   const { data: tradeValuesData } = useQuery({
@@ -33,13 +36,20 @@ export function Players() {
       .filter((p) => (position === "ALL" ? true : p.position === position))
       .filter((p) => (team === "ALL" ? true : p.team === team))
       .filter((p) => (query === "" ? true : p.name.toLowerCase().includes(query)))
+      .filter((p) => {
+        if (health === "ALL") return true;
+        if (health === "HEALTHY") return !p.injuryStatus;
+        return Boolean(p.injuryStatus);
+      })
+      .filter((p) => (rookiesOnly ? p.yearsExp === 0 : true))
+      .filter((p) => (rankedOnly ? Boolean(values[p.playerId]) : true))
       .sort((a, b) => {
         const rankA = values[a.playerId]?.overallRank ?? Infinity;
         const rankB = values[b.playerId]?.overallRank ?? Infinity;
         if (rankA !== rankB) return rankA - rankB;
         return a.name.localeCompare(b.name);
       });
-  }, [data, search, position, team, values]);
+  }, [data, search, position, team, health, rookiesOnly, rankedOnly, values]);
 
   return (
     <div className="page">
@@ -76,6 +86,22 @@ export function Players() {
           <option value="full">Full PPR</option>
           <option value="dynasty">Dynasty</option>
         </select>
+      </div>
+
+      <div className="filter-bar filter-bar--secondary">
+        <select value={health} onChange={(e) => setHealth(e.target.value)}>
+          <option value="ALL">Any health status</option>
+          <option value="HEALTHY">Healthy only</option>
+          <option value="INJURED">Injured / questionable</option>
+        </select>
+        <label className="filter-toggle">
+          <input type="checkbox" checked={rookiesOnly} onChange={(e) => setRookiesOnly(e.target.checked)} />
+          Rookies only
+        </label>
+        <label className="filter-toggle">
+          <input type="checkbox" checked={rankedOnly} onChange={(e) => setRankedOnly(e.target.checked)} />
+          Ranked only
+        </label>
       </div>
 
       {isLoading && <p>Loading players...</p>}

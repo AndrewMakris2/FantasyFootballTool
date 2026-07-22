@@ -34,10 +34,25 @@ export function LeagueDetail() {
           {data.currentMatchup && (
             <section>
               <h2>Week {data.currentMatchup.week} Matchup</h2>
-              <p>
-                {data.myTeam.teamName}: {data.currentMatchup.myScore.toFixed(1)} vs{" "}
-                {data.currentMatchup.opponentTeamName}: {data.currentMatchup.opponentScore.toFixed(1)}
-              </p>
+              <div className="matchup-card">
+                <div
+                  className={`matchup-card__team ${
+                    data.currentMatchup.myScore >= data.currentMatchup.opponentScore ? "matchup-card__team--leading" : ""
+                  }`}
+                >
+                  <span className="matchup-card__name">{data.myTeam.teamName}</span>
+                  <span className="matchup-card__score">{data.currentMatchup.myScore.toFixed(1)}</span>
+                </div>
+                <span className="matchup-card__vs">VS</span>
+                <div
+                  className={`matchup-card__team ${
+                    data.currentMatchup.opponentScore > data.currentMatchup.myScore ? "matchup-card__team--leading" : ""
+                  }`}
+                >
+                  <span className="matchup-card__name">{data.currentMatchup.opponentTeamName}</span>
+                  <span className="matchup-card__score">{data.currentMatchup.opponentScore.toFixed(1)}</span>
+                </div>
+              </div>
             </section>
           )}
 

@@ -2,17 +2,17 @@
   color-scheme: dark;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
-  --bg: #0a0b10;
-  --surface: #15171f;
-  --surface-2: #1b1e29;
-  --border: #262a38;
-  --text: #edeef2;
-  --muted: #8b90a0;
+  --bg: #100c1e;
+  --surface: #1e1832;
+  --surface-2: #271f42;
+  --border: #3b3159;
+  --text: #f6f5fb;
+  --muted: #a9a5c4;
 
-  --accent: #7c6cf6;
-  --accent-2: #4f8cff;
-  --accent-gradient: linear-gradient(135deg, #7c6cf6 0%, #4f8cff 60%, #22d3ee 100%);
-  --accent-glow: rgba(124, 108, 246, 0.35);
+  --accent: #9179fb;
+  --accent-2: #5b9bff;
+  --accent-gradient: linear-gradient(135deg, #9179fb 0%, #5b9bff 60%, #2ee2f5 100%);
+  --accent-glow: rgba(145, 121, 251, 0.45);
 
   --sleeper: #6a4cff;
   --yahoo: #a855f7;
@@ -44,8 +44,9 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(circle at 15% -10%, rgba(124, 108, 246, 0.16), transparent 45%),
-    radial-gradient(circle at 85% 0%, rgba(34, 211, 238, 0.10), transparent 40%),
+    radial-gradient(circle at 15% -10%, rgba(145, 121, 251, 0.22), transparent 45%),
+    radial-gradient(circle at 85% 0%, rgba(46, 226, 245, 0.14), transparent 40%),
+    radial-gradient(circle at 50% 100%, rgba(91, 155, 255, 0.08), transparent 50%),
     var(--bg);
   color: var(--text);
 }
@@ -89,7 +90,7 @@ select {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: rgba(10, 11, 16, 0.8);
+  background: rgba(16, 12, 30, 0.75);
   backdrop-filter: blur(10px);
 }
 
@@ -717,14 +718,69 @@ select:focus {
 /* Hero */
 
 .hero {
+  position: relative;
   text-align: center;
-  padding: 3rem 1rem 3.5rem;
+  padding: 4.5rem 1.5rem 4rem;
   margin-bottom: 1rem;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(145, 121, 251, 0.28), transparent 60%),
+    linear-gradient(180deg, #171129 0%, var(--bg) 100%);
+}
+
+.hero__field {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.035) 0px,
+    rgba(255, 255, 255, 0.035) 2px,
+    transparent 2px,
+    transparent 64px
+  );
+  mask-image: radial-gradient(ellipse at 50% 30%, black 0%, transparent 75%);
+}
+
+.hero__football {
+  position: absolute;
+  width: 180px;
+  opacity: 0.16;
+  filter: drop-shadow(0 0 24px var(--accent-glow));
+  animation: hero-football-float 8s ease-in-out infinite;
+}
+
+.hero__football--left {
+  top: 10%;
+  left: -3%;
+  transform: rotate(-18deg);
+}
+
+.hero__football--right {
+  bottom: 6%;
+  right: -3%;
+  transform: rotate(24deg);
+  animation-delay: -4s;
+}
+
+@keyframes hero-football-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-18deg);
+  }
+  50% {
+    transform: translateY(-14px) rotate(-14deg);
+  }
+}
+
+.hero__content {
+  position: relative;
+  z-index: 1;
 }
 
 .hero__title {
   display: block;
-  font-size: 3.25rem;
+  font-size: 3.5rem;
   font-weight: 900;
   letter-spacing: -0.02em;
   margin: 0 0 0.5rem;
@@ -750,7 +806,7 @@ select:focus {
 
 .hero__subtitle {
   color: var(--muted);
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   margin: 0 0 1.5rem;
 }
 
@@ -898,4 +954,99 @@ select:focus {
   color: var(--muted);
   font-weight: 600;
   padding: 0.5rem 0;
+}
+
+/* Matchup card */
+
+.matchup-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.matchup-card__team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: var(--radius-md);
+}
+
+.matchup-card__team--leading {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.matchup-card__name {
+  font-weight: 700;
+}
+
+.matchup-card__score {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--accent-2);
+}
+
+.matchup-card__team--leading .matchup-card__score {
+  color: var(--accent);
+}
+
+.matchup-card__vs {
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+/* Extra filters */
+
+.filter-bar--secondary {
+  margin-top: -0.5rem;
+}
+
+.filter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0.55rem 0.85rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.filter-toggle:has(input:checked) {
+  color: var(--text);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+}
+
+.filter-toggle input {
+  accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+}
+
+/* Checklist / onboarding */
+
+.checklist label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+}
+
+.checklist input[type="checkbox"] {
+  accent-color: var(--accent);
+  width: 17px;
+  height: 17px;
 }
