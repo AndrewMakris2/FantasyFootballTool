@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
+import { Link } from "react-router-dom";
 import type { PlayerProfile } from "../types/player";
 import type { TradeValueEntry } from "../types/tradeValue";
 import { PositionBadge } from "./PositionBadge";
+import { PlayerAvatar } from "./PlayerAvatar";
 
 function formatHeight(inches: number | null): string {
   if (inches === null) return "—";
@@ -41,10 +43,13 @@ export function ComparisonTable({ players, values, onRemove }: ComparisonTablePr
             <th>Attribute</th>
             {players.map((p) => (
               <th key={p.playerId}>
-                {p.name}
-                <button type="button" className="trade-side__remove" onClick={() => onRemove(p.playerId)}>
-                  &times;
-                </button>
+                <div className="comparison-table__player">
+                  <PlayerAvatar playerId={p.playerId} name={p.name} position={p.position} team={p.team} size="sm" />
+                  <Link to={`/players/${p.playerId}`}>{p.name}</Link>
+                  <button type="button" className="trade-side__remove" onClick={() => onRemove(p.playerId)}>
+                    &times;
+                  </button>
+                </div>
               </th>
             ))}
           </tr>

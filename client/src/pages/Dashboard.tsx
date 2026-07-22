@@ -1,18 +1,62 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getLeagues } from "../api/leagues";
+import { getPlayers } from "../api/players";
+import { getTradeValues } from "../api/tradeValues";
 import { LeagueCard } from "../components/LeagueCard";
+import { PlayerAvatar } from "../components/PlayerAvatar";
+import { PositionBadge } from "../components/PositionBadge";
+
+const TOP_PLAYERS_COUNT = 10;
 
 export function Dashboard() {
   const { data, isLoading, isError, error } = useQuery({ queryKey: ["leagues"], queryFn: getLeagues });
+  const { data: playersData } = useQuery({ queryKey: ["players"], queryFn: getPlayers });
+  const { data: tradeValuesData } = useQuery({
+    queryKey: ["trade-values", false, 1],
+    queryFn: () => getTradeValues(false, 1),
+  });
+
+  const topPlayers = playersData?.players
+    .map((p) => ({ player: p, entry: tradeValuesData?.values[p.playerId] }))
+    .filter((x) => x.entry)
+    .sort((a, b) => a.entry!.overallRank - b.entry!.overallRank)
+    .slice(0, TOP_PLAYERS_COUNT);
 
   return (
     <div className="page">
-      <div className="page-header">
-        <h1>Your Leagues</h1>
+      <div className="hero">
+        <h1 className="hero__title">The War Room</h1>
+        <p className="hero__subtitle">Your leagues, your players, your edge — all in one place.</p>
         <Link to="/onboarding" className="button-link">
           + Add leagues
         </Link>
+      </div>
+
+      {topPlayers && topPlayers.length > 0 && (
+        <section>
+          <h2>Top Fantasy Players</h2>
+          <div className="top-players-strip">
+            {topPlayers.map(({ player, entry }) => (
+              <Link key={player.playerId} to={`/players/${player.playerId}`} className="top-player-card">
+                <PlayerAvatar
+                  playerId={player.playerId}
+                  name={player.name}
+                  position={player.position}
+                  team={player.team}
+                  size="md"
+                />
+                <span className="top-player-card__rank">#{entry!.overallRank}</span>
+                <span className="top-player-card__name">{player.name}</span>
+                <PositionBadge position={player.position} />
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <div className="page-header">
+        <h2>Your Leagues</h2>
       </div>
 
       {isLoading && <p>Loading leagues...</p>}

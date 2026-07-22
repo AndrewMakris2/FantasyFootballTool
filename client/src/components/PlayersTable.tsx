@@ -1,6 +1,8 @@
+import { Link } from "react-router-dom";
 import type { PlayerProfile } from "../types/player";
 import type { TradeValueEntry } from "../types/tradeValue";
 import { PositionBadge } from "./PositionBadge";
+import { PlayerAvatar } from "./PlayerAvatar";
 
 function formatHeight(inches: number | null): string {
   if (inches === null) return "—";
@@ -41,10 +43,21 @@ export function PlayersTable({ players, values }: PlayersTableProps) {
           return (
             <tr key={player.playerId}>
               <td>
-                {player.name}
-                {player.jerseyNumber !== null && (
-                  <span className="players-table__number"> #{player.jerseyNumber}</span>
-                )}
+                <Link to={`/players/${player.playerId}`} className="table-player-link">
+                  <PlayerAvatar
+                    playerId={player.playerId}
+                    name={player.name}
+                    position={player.position}
+                    team={player.team}
+                    size="sm"
+                  />
+                  <span>
+                    {player.name}
+                    {player.jerseyNumber !== null && (
+                      <span className="players-table__number"> #{player.jerseyNumber}</span>
+                    )}
+                  </span>
+                </Link>
               </td>
               <td>{entry ? `#${entry.overallRank}` : "—"}</td>
               <td>{entry ? entry.value.toLocaleString() : "Unranked"}</td>

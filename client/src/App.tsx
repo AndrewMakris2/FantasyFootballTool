@@ -7,6 +7,7 @@ import { Players } from "./pages/Players";
 import { TradeAnalyzer } from "./pages/TradeAnalyzer";
 import { PlayerComparison } from "./pages/PlayerComparison";
 import { WaiverWire } from "./pages/WaiverWire";
+import { PlayerProfile } from "./pages/PlayerProfile";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/leagues/:platform/:leagueId" element={<LeagueDetail />} />
         <Route path="/players" element={<Players />} />
+        <Route path="/players/:playerId" element={<PlayerProfile />} />
         <Route path="/trade-analyzer" element={<TradeAnalyzer />} />
         <Route path="/compare" element={<PlayerComparison />} />
         <Route path="/waiver-wire" element={<WaiverWire />} />
