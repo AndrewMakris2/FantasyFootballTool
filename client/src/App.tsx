@@ -8,6 +8,7 @@ import { TradeAnalyzer } from "./pages/TradeAnalyzer";
 import { PlayerComparison } from "./pages/PlayerComparison";
 import { WaiverWire } from "./pages/WaiverWire";
 import { PlayerProfile } from "./pages/PlayerProfile";
+import { MockDraft } from "./pages/MockDraft";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/trade-analyzer" element={<TradeAnalyzer />} />
         <Route path="/compare" element={<PlayerComparison />} />
         <Route path="/waiver-wire" element={<WaiverWire />} />
+        <Route path="/mock-draft" element={<MockDraft />} />
       </Routes>
     </>
   );

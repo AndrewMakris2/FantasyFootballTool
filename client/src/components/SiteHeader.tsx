@@ -26,6 +26,9 @@ export function SiteHeader() {
           <NavLink to="/waiver-wire" className={navLinkClass}>
             Waiver Wire
           </NavLink>
+          <NavLink to="/mock-draft" className={navLinkClass}>
+            Mock Draft
+          </NavLink>
         </nav>
       </div>
     </header>
