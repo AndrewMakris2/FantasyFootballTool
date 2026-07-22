@@ -109,6 +109,25 @@ function toNumber(value: string | number | null | undefined): number | null {
   return Number.isFinite(num) ? num : null;
 }
 
+function toPlayerProfile(playerId: string, meta: SleeperPlayerMeta): PlayerProfile {
+  return {
+    playerId,
+    name: meta.full_name ?? (`${meta.first_name ?? ""} ${meta.last_name ?? ""}`.trim() || playerId),
+    position: meta.position ?? "UNK",
+    team: meta.team ?? "FA",
+    age: toNumber(meta.age),
+    heightInches: toNumber(meta.height),
+    weightLbs: toNumber(meta.weight),
+    college: meta.college ?? null,
+    yearsExp: toNumber(meta.years_exp),
+    jerseyNumber: toNumber(meta.number),
+    status: meta.status ?? null,
+    injuryStatus: meta.injury_status ?? null,
+    depthChartPosition: meta.depth_chart_position ?? null,
+    depthChartOrder: toNumber(meta.depth_chart_order),
+  };
+}
+
 export async function getFantasyRelevantPlayers(): Promise<PlayerProfile[]> {
   const playersMap = await getPlayersMap();
   const profiles: PlayerProfile[] = [];
@@ -119,25 +138,33 @@ export async function getFantasyRelevantPlayers(): Promise<PlayerProfile[]> {
     if (!meta.team) continue;
     if (!meta.position || !FANTASY_POSITIONS.has(meta.position)) continue;
 
-    profiles.push({
-      playerId,
-      name: meta.full_name ?? (`${meta.first_name ?? ""} ${meta.last_name ?? ""}`.trim() || playerId),
-      position: meta.position,
-      team: meta.team,
-      age: toNumber(meta.age),
-      heightInches: toNumber(meta.height),
-      weightLbs: toNumber(meta.weight),
-      college: meta.college ?? null,
-      yearsExp: toNumber(meta.years_exp),
-      jerseyNumber: toNumber(meta.number),
-      status: meta.status ?? null,
-      injuryStatus: meta.injury_status ?? null,
-      depthChartPosition: meta.depth_chart_position ?? null,
-      depthChartOrder: toNumber(meta.depth_chart_order),
-    });
+    profiles.push(toPlayerProfile(playerId, meta));
   }
 
   return profiles;
+}
+
+interface SleeperTrendingEntry {
+  player_id: string;
+  count: number;
+}
+
+export async function getTrendingPlayers(
+  type: "add" | "drop",
+  limit = 25,
+): Promise<(PlayerProfile & { trendCount: number })[]> {
+  const [trending, playersMap] = await Promise.all([
+    sleeperGet<SleeperTrendingEntry[]>(`/players/nfl/trending/${type}?lookback_hours=24&limit=${limit}`),
+    getPlayersMap(),
+  ]);
+
+  const results: (PlayerProfile & { trendCount: number })[] = [];
+  for (const entry of trending) {
+    const meta = playersMap[entry.player_id];
+    if (!meta) continue;
+    results.push({ ...toPlayerProfile(entry.player_id, meta), trendCount: entry.count });
+  }
+  return results;
 }
 
 export async function getLeagueDetail(leagueId: string, userId: string): Promise<League> {

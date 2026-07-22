@@ -3,17 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { getPlayers } from "../api/players";
 import { getTradeValues } from "../api/tradeValues";
 import { PlayersTable } from "../components/PlayersTable";
+import { FORMAT_PARAMS, type RankingFormat } from "../lib/rankingFormats";
 
 const POSITIONS = ["QB", "RB", "WR", "TE", "K", "DEF"];
-
-type RankingFormat = "standard" | "half" | "full" | "dynasty";
-
-const FORMAT_PARAMS: Record<RankingFormat, { dynasty: boolean; ppr: number }> = {
-  standard: { dynasty: false, ppr: 0 },
-  half: { dynasty: false, ppr: 0.5 },
-  full: { dynasty: false, ppr: 1 },
-  dynasty: { dynasty: true, ppr: 1 },
-};
 
 export function Players() {
   const { data, isLoading, isError, error } = useQuery({ queryKey: ["players"], queryFn: getPlayers });

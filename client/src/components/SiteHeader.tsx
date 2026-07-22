@@ -12,6 +12,8 @@ export function SiteHeader() {
           <Link to="/">Dashboard</Link>
           <Link to="/players">Players</Link>
           <Link to="/trade-analyzer">Trade Analyzer</Link>
+          <Link to="/compare">Compare</Link>
+          <Link to="/waiver-wire">Waiver Wire</Link>
         </nav>
       </div>
     </header>

@@ -4,3 +4,4 @@ dist
 *.local
 .netlify
 deploy-*.zip
+deno.lock
