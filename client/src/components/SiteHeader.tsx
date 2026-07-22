@@ -1,4 +1,6 @@
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
+
+const navLinkClass = ({ isActive }: { isActive: boolean }) => (isActive ? "active" : undefined);
 
 export function SiteHeader() {
   return (
@@ -9,11 +11,21 @@ export function SiteHeader() {
           The War Room
         </Link>
         <nav className="site-header__nav">
-          <Link to="/">Dashboard</Link>
-          <Link to="/players">Players</Link>
-          <Link to="/trade-analyzer">Trade Analyzer</Link>
-          <Link to="/compare">Compare</Link>
-          <Link to="/waiver-wire">Waiver Wire</Link>
+          <NavLink to="/" end className={navLinkClass}>
+            Dashboard
+          </NavLink>
+          <NavLink to="/players" className={navLinkClass}>
+            Players
+          </NavLink>
+          <NavLink to="/trade-analyzer" className={navLinkClass}>
+            Trade Analyzer
+          </NavLink>
+          <NavLink to="/compare" className={navLinkClass}>
+            Compare
+          </NavLink>
+          <NavLink to="/waiver-wire" className={navLinkClass}>
+            Waiver Wire
+          </NavLink>
         </nav>
       </div>
     </header>

@@ -1,4 +1,5 @@
 import type { TrendingPlayer } from "../api/trendingPlayers";
+import { PositionBadge } from "./PositionBadge";
 
 export function TrendingTable({ players }: { players: TrendingPlayer[] }) {
   if (players.length === 0) {
@@ -22,9 +23,9 @@ export function TrendingTable({ players }: { players: TrendingPlayer[] }) {
           <tr key={player.playerId}>
             <td>{index + 1}</td>
             <td>{player.name}</td>
-            <td>{player.position}</td>
+            <td><PositionBadge position={player.position} /></td>
             <td>{player.team}</td>
-            <td>{player.trendCount.toLocaleString()}</td>
+            <td className="trending-count">{player.trendCount.toLocaleString()}</td>
             <td>
               {player.injuryStatus ? <span className="injury-badge">{player.injuryStatus}</span> : "Healthy"}
             </td>

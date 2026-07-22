@@ -1,4 +1,5 @@
 import type { Player } from "../types/league";
+import { PositionBadge } from "./PositionBadge";
 
 export function RosterTable({ roster }: { roster: Player[] }) {
   if (roster.length === 0) {
@@ -17,7 +18,7 @@ export function RosterTable({ roster }: { roster: Player[] }) {
         {roster.map((player) => (
           <tr key={player.playerId}>
             <td>{player.name}</td>
-            <td>{player.position}</td>
+            <td><PositionBadge position={player.position} /></td>
             <td>{player.team ?? "FA"}</td>
           </tr>
         ))}

@@ -61,6 +61,12 @@ export function TradeAnalyzer() {
       : `Side B gives up more value (+${Math.abs(diff).toLocaleString()}) — favors Side A.`;
   }
 
+  function verdictClass(): string {
+    if (!hasTrade) return "trade-verdict--neutral";
+    const threshold = Math.max(totalA, totalB) * 0.1;
+    return Math.abs(diff) <= threshold ? "trade-verdict--even" : "trade-verdict--lopsided";
+  }
+
   return (
     <div className="page">
       <div className="page-header">
@@ -147,7 +153,7 @@ export function TradeAnalyzer() {
         />
       </div>
 
-      <div className="trade-verdict">{verdict()}</div>
+      <div className={`trade-verdict ${verdictClass()}`}>{verdict()}</div>
     </div>
   );
 }

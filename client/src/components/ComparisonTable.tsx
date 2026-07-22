@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { PlayerProfile } from "../types/player";
 import type { TradeValueEntry } from "../types/tradeValue";
+import { PositionBadge } from "./PositionBadge";
 
 function formatHeight(inches: number | null): string {
   if (inches === null) return "—";
@@ -23,7 +24,7 @@ export function ComparisonTable({ players, values, onRemove }: ComparisonTablePr
   const rows: [string, (p: PlayerProfile) => ReactNode][] = [
     ["Rank", (p) => (values[p.playerId] ? `#${values[p.playerId].overallRank}` : "—")],
     ["Value", (p) => (values[p.playerId] ? values[p.playerId].value.toLocaleString() : "Unranked")],
-    ["Position", (p) => p.position],
+    ["Position", (p) => <PositionBadge position={p.position} />],
     ["Team", (p) => p.team],
     ["Age", (p) => p.age ?? "—"],
     ["Height/Weight", (p) => `${formatHeight(p.heightInches)}${p.weightLbs !== null ? ` / ${p.weightLbs} lb` : ""}`],
