@@ -1,0 +1,10 @@
+[build]
+  command = "npm --prefix client run build"
+  publish = "client/dist"
+  functions = "netlify/functions"
+
+[dev]
+  command = "npm --prefix client run dev"
+  targetPort = 5174
+  publish = "client/dist"
+  functions = "netlify/functions"
