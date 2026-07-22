@@ -3,10 +3,16 @@ import { Link } from "react-router-dom";
 export function SiteHeader() {
   return (
     <header className="site-header">
-      <Link to="/" className="site-header__brand">
-        <span className="site-header__mark">⚔</span>
-        The War Room
-      </Link>
+      <div className="site-header__inner">
+        <Link to="/" className="site-header__brand">
+          <span className="site-header__mark">⚔</span>
+          The War Room
+        </Link>
+        <nav className="site-header__nav">
+          <Link to="/">Dashboard</Link>
+          <Link to="/players">Players</Link>
+        </nav>
+      </div>
     </header>
   );
 }

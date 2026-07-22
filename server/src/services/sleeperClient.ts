@@ -1,5 +1,8 @@
 import { getStore } from "@netlify/blobs";
 import type { League, Matchup, Player, TeamStanding } from "../types/league.js";
+import type { PlayerProfile } from "../types/player.js";
+
+const FANTASY_POSITIONS = new Set(["QB", "RB", "WR", "TE", "K", "DEF"]);
 
 const BASE_URL = "https://api.sleeper.app/v1";
 const CURRENT_SEASON = String(new Date().getFullYear());
@@ -48,6 +51,18 @@ interface SleeperPlayerMeta {
   last_name?: string;
   position?: string;
   team?: string | null;
+  age?: number | null;
+  height?: string | null;
+  weight?: string | null;
+  college?: string | null;
+  years_exp?: number | null;
+  number?: number | null;
+  // Real players use `status` (e.g. "Active"); team defenses only set `active` (boolean).
+  status?: string | null;
+  active?: boolean;
+  injury_status?: string | null;
+  depth_chart_position?: string | null;
+  depth_chart_order?: number | null;
 }
 
 async function sleeperGet<T>(pathname: string): Promise<T> {
@@ -86,6 +101,43 @@ function toPlayer(playerId: string, meta: SleeperPlayerMeta | undefined): Player
     position: meta?.position ?? "UNK",
     team: meta?.team ?? null,
   };
+}
+
+function toNumber(value: string | number | null | undefined): number | null {
+  if (value === null || value === undefined) return null;
+  const num = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(num) ? num : null;
+}
+
+export async function getFantasyRelevantPlayers(): Promise<PlayerProfile[]> {
+  const playersMap = await getPlayersMap();
+  const profiles: PlayerProfile[] = [];
+
+  for (const [playerId, meta] of Object.entries(playersMap)) {
+    const isActive = meta.position === "DEF" ? meta.active === true : meta.status === "Active";
+    if (!isActive) continue;
+    if (!meta.team) continue;
+    if (!meta.position || !FANTASY_POSITIONS.has(meta.position)) continue;
+
+    profiles.push({
+      playerId,
+      name: meta.full_name ?? (`${meta.first_name ?? ""} ${meta.last_name ?? ""}`.trim() || playerId),
+      position: meta.position,
+      team: meta.team,
+      age: toNumber(meta.age),
+      heightInches: toNumber(meta.height),
+      weightLbs: toNumber(meta.weight),
+      college: meta.college ?? null,
+      yearsExp: toNumber(meta.years_exp),
+      jerseyNumber: toNumber(meta.number),
+      status: meta.status ?? null,
+      injuryStatus: meta.injury_status ?? null,
+      depthChartPosition: meta.depth_chart_position ?? null,
+      depthChartOrder: toNumber(meta.depth_chart_order),
+    });
+  }
+
+  return profiles;
 }
 
 export async function getLeagueDetail(leagueId: string, userId: string): Promise<League> {
