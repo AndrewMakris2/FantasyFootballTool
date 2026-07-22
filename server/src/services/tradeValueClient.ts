@@ -14,12 +14,12 @@ interface FantasyCalcEntry {
   trend30Day: number;
 }
 
-async function fetchFantasyCalcValues(isDynasty: boolean): Promise<FantasyCalcEntry[]> {
+async function fetchFantasyCalcValues(isDynasty: boolean, ppr: number): Promise<FantasyCalcEntry[]> {
   const params = new URLSearchParams({
     isDynasty: String(isDynasty),
     numQbs: "1",
     numTeams: "12",
-    ppr: "1",
+    ppr: String(ppr),
   });
   const res = await fetch(`${BASE_URL}?${params.toString()}`);
   if (!res.ok) {
@@ -28,8 +28,11 @@ async function fetchFantasyCalcValues(isDynasty: boolean): Promise<FantasyCalcEn
   return (await res.json()) as FantasyCalcEntry[];
 }
 
-export async function getTradeValues(isDynasty: boolean): Promise<Record<string, TradeValueEntry>> {
-  const cacheKey = isDynasty ? "dynasty" : "redraft";
+export async function getTradeValues(
+  isDynasty: boolean,
+  ppr: number = 1,
+): Promise<Record<string, TradeValueEntry>> {
+  const cacheKey = `${isDynasty ? "dynasty" : "redraft"}-ppr${ppr}`;
   const store = getStore("tradevalue-cache");
   const cached = await store.getWithMetadata(cacheKey, { type: "json" });
   const fetchedAt = cached?.metadata.fetchedAt as number | undefined;
@@ -37,7 +40,7 @@ export async function getTradeValues(isDynasty: boolean): Promise<Record<string,
     return cached.data;
   }
 
-  const entries = await fetchFantasyCalcValues(isDynasty);
+  const entries = await fetchFantasyCalcValues(isDynasty, ppr);
   const values: Record<string, TradeValueEntry> = {};
   for (const entry of entries) {
     if (!entry.player.sleeperId) continue;

@@ -1,15 +1,33 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getPlayers } from "../api/players";
+import { getTradeValues } from "../api/tradeValues";
 import { PlayersTable } from "../components/PlayersTable";
 
 const POSITIONS = ["QB", "RB", "WR", "TE", "K", "DEF"];
+
+type RankingFormat = "standard" | "half" | "full" | "dynasty";
+
+const FORMAT_PARAMS: Record<RankingFormat, { dynasty: boolean; ppr: number }> = {
+  standard: { dynasty: false, ppr: 0 },
+  half: { dynasty: false, ppr: 0.5 },
+  full: { dynasty: false, ppr: 1 },
+  dynasty: { dynasty: true, ppr: 1 },
+};
 
 export function Players() {
   const { data, isLoading, isError, error } = useQuery({ queryKey: ["players"], queryFn: getPlayers });
   const [search, setSearch] = useState("");
   const [position, setPosition] = useState("ALL");
   const [team, setTeam] = useState("ALL");
+  const [format, setFormat] = useState<RankingFormat>("full");
+
+  const { dynasty, ppr } = FORMAT_PARAMS[format];
+  const { data: tradeValuesData } = useQuery({
+    queryKey: ["trade-values", dynasty, ppr],
+    queryFn: () => getTradeValues(dynasty, ppr),
+  });
+  const values = tradeValuesData?.values ?? {};
 
   const teams = useMemo(() => {
     if (!data) return [];
@@ -23,8 +41,13 @@ export function Players() {
       .filter((p) => (position === "ALL" ? true : p.position === position))
       .filter((p) => (team === "ALL" ? true : p.team === team))
       .filter((p) => (query === "" ? true : p.name.toLowerCase().includes(query)))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [data, search, position, team]);
+      .sort((a, b) => {
+        const rankA = values[a.playerId]?.overallRank ?? Infinity;
+        const rankB = values[b.playerId]?.overallRank ?? Infinity;
+        if (rankA !== rankB) return rankA - rankB;
+        return a.name.localeCompare(b.name);
+      });
+  }, [data, search, position, team, values]);
 
   return (
     <div className="page">
@@ -55,6 +78,12 @@ export function Players() {
             </option>
           ))}
         </select>
+        <select value={format} onChange={(e) => setFormat(e.target.value as RankingFormat)}>
+          <option value="standard">Standard</option>
+          <option value="half">Half PPR</option>
+          <option value="full">Full PPR</option>
+          <option value="dynasty">Dynasty</option>
+        </select>
       </div>
 
       {isLoading && <p>Loading players...</p>}
@@ -65,7 +94,7 @@ export function Players() {
           <p className="empty-state">
             {filtered.length} of {data.players.length} players
           </p>
-          <PlayersTable players={filtered} />
+          <PlayersTable players={filtered} values={values} />
         </>
       )}
     </div>
