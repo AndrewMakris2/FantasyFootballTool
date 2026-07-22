@@ -8,3 +8,11 @@
   targetPort = 5174
   publish = "client/dist"
   functions = "netlify/functions"
+
+# SPA fallback: client-side routes (e.g. /players, /trade-analyzer) have no matching
+# static file, so serve index.html and let React Router handle them. Function paths
+# (/api/*) are matched before redirects, so this doesn't shadow the API.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
