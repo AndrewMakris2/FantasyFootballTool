@@ -1,4 +1,4 @@
-import type { League, Matchup, Player, TeamStanding } from "../types/league.js";
+import type { League, Matchup, Player, TeamRoster, TeamStanding } from "../types/league.js";
 import { getYahooTokens, setYahooTokens, type YahooTokens } from "../store/db.js";
 
 const AUTH_URL = "https://api.login.yahoo.com/oauth2/request_auth";
@@ -119,6 +119,27 @@ function extractItems(collection: Record<string, unknown>): unknown[] {
   return items;
 }
 
+function parseTeamRoster(teamWrapper: any): Player[] {
+  const roster: Player[] = [];
+  if (!teamWrapper?.team[1]?.roster) return roster;
+
+  const rosterPlayers = extractItems(teamWrapper.team[1].roster[0].players) as any[];
+  for (const playerWrapper of rosterPlayers) {
+    const playerMeta = playerWrapper.player[0] as any[];
+    const name = playerMeta.find((e: any) => e && e.name)?.name?.full;
+    const position = playerMeta.find((e: any) => e && e.display_position)?.display_position;
+    const team = playerMeta.find((e: any) => e && e.editorial_team_abbr)?.editorial_team_abbr;
+    const playerKey = playerMeta.find((e: any) => e && e.player_key)?.player_key;
+    roster.push({
+      playerId: playerKey ?? name ?? "unknown",
+      name: name ?? "Unknown Player",
+      position: position ?? "UNK",
+      team: team ?? null,
+    });
+  }
+  return roster;
+}
+
 interface YahooLeagueRef {
   league_key: string;
   league_id: string;
@@ -187,23 +208,16 @@ export async function getLeagueDetail(leagueKey: string): Promise<League> {
   const myTeamId = String(myTeamMeta.find((e: any) => e && e.team_id)?.team_id ?? "");
   const myStanding = standings.find((s) => s.teamId === myTeamId);
 
-  const roster: Player[] = [];
-  if (myTeamWrapper?.team[1]?.roster) {
-    const rosterPlayers = extractItems(myTeamWrapper.team[1].roster[0].players) as any[];
-    for (const playerWrapper of rosterPlayers) {
-      const playerMeta = playerWrapper.player[0] as any[];
-      const name = playerMeta.find((e: any) => e && e.name)?.name?.full;
-      const position = playerMeta.find((e: any) => e && e.display_position)?.display_position;
-      const team = playerMeta.find((e: any) => e && e.editorial_team_abbr)?.editorial_team_abbr;
-      const playerKey = playerMeta.find((e: any) => e && e.player_key)?.player_key;
-      roster.push({
-        playerId: playerKey ?? name ?? "unknown",
-        name: name ?? "Unknown Player",
-        position: position ?? "UNK",
-        team: team ?? null,
-      });
-    }
-  }
+  const roster = parseTeamRoster(myTeamWrapper);
+
+  const teams: TeamRoster[] = standingsTeamsRaw.map((teamWrapper) => {
+    const teamMeta = teamWrapper.team[0] as any[];
+    return {
+      teamId: String(teamMeta.find((e: any) => e && e.team_id)?.team_id ?? ""),
+      teamName: teamMeta.find((e: any) => e && e.name)?.name ?? "Unknown Team",
+      roster: parseTeamRoster(teamWrapper),
+    };
+  });
 
   const currentMatchup: Matchup | null = null; // Deferred: Yahoo matchup parsing follows the same nested-array pattern.
 
@@ -218,6 +232,7 @@ export async function getLeagueDetail(leagueKey: string): Promise<League> {
       record: myStanding?.record ?? { wins: 0, losses: 0, ties: 0 },
       roster,
     },
+    teams,
     standings,
     currentMatchup,
   };

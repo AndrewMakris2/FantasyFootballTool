@@ -4,6 +4,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { Onboarding } from "./pages/Onboarding";
 import { LeagueDetail } from "./pages/LeagueDetail";
 import { Players } from "./pages/Players";
+import { TradeAnalyzer } from "./pages/TradeAnalyzer";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/leagues/:platform/:leagueId" element={<LeagueDetail />} />
         <Route path="/players" element={<Players />} />
+        <Route path="/trade-analyzer" element={<TradeAnalyzer />} />
       </Routes>
     </>
   );

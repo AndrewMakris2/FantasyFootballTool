@@ -11,6 +11,7 @@ export function SiteHeader() {
         <nav className="site-header__nav">
           <Link to="/">Dashboard</Link>
           <Link to="/players">Players</Link>
+          <Link to="/trade-analyzer">Trade Analyzer</Link>
         </nav>
       </div>
     </header>

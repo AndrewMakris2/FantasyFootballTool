@@ -30,6 +30,12 @@ export interface Matchup {
   opponentTeamName: string;
 }
 
+export interface TeamRoster {
+  teamId: string;
+  teamName: string;
+  roster: Player[];
+}
+
 export interface League {
   platform: Platform;
   leagueId: string;
@@ -41,6 +47,7 @@ export interface League {
     record: TeamRecord;
     roster: Player[];
   };
+  teams: TeamRoster[];
   standings: TeamStanding[];
   currentMatchup: Matchup | null;
 }

@@ -1,5 +1,5 @@
 import { getStore } from "@netlify/blobs";
-import type { League, Matchup, Player, TeamStanding } from "../types/league.js";
+import type { League, Matchup, Player, TeamRoster, TeamStanding } from "../types/league.js";
 import type { PlayerProfile } from "../types/player.js";
 
 const FANTASY_POSITIONS = new Set(["QB", "RB", "WR", "TE", "K", "DEF"]);
@@ -169,6 +169,12 @@ export async function getLeagueDetail(leagueId: string, userId: string): Promise
       rank: index + 1,
     }));
 
+  const teams: TeamRoster[] = rosters.map((r) => ({
+    teamId: String(r.roster_id),
+    teamName: userNameByOwnerId.get(r.owner_id) ?? `Team ${r.roster_id}`,
+    roster: (r.players ?? []).map((playerId) => toPlayer(playerId, playersMap[playerId])),
+  }));
+
   let currentMatchup: Matchup | null = null;
   try {
     const state = await sleeperGet<{ week: number }>("/state/nfl");
@@ -207,6 +213,7 @@ export async function getLeagueDetail(leagueId: string, userId: string): Promise
       },
       roster: (myRoster.players ?? []).map((playerId) => toPlayer(playerId, playersMap[playerId])),
     },
+    teams,
     standings,
     currentMatchup,
   };
