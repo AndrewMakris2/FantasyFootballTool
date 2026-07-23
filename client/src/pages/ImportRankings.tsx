@@ -4,6 +4,7 @@ import { getPlayers } from "../api/players";
 import { getCustomRankingSets, saveCustomRankingSet, deleteCustomRankingSet } from "../api/customRankings";
 import { parseRankingList, buildValueEntries, type ParseRankingResult } from "../lib/parseRankingImport";
 import { PlayerSearchAdd } from "../components/PlayerSearchAdd";
+import { FootballIcon } from "../components/FootballIcon";
 import type { PlayerProfile } from "../types/player";
 
 interface ResolvedEntry {
@@ -80,6 +81,7 @@ export function ImportRankings() {
     <div className="page">
       <div className="page-header">
         <h1>Import Rankings</h1>
+        <FootballIcon className="page-header__decoration" />
       </div>
       <p className="empty-state">
         Paste a ranked player list from any site or expert — one player per line, in rank order. We'll

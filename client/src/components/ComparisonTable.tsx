@@ -6,6 +6,7 @@ import { PositionBadge } from "./PositionBadge";
 import { PlayerAvatar } from "./PlayerAvatar";
 import { TeamTag } from "./TeamTag";
 import { medalClass } from "../lib/medal";
+import { byeWeekFor } from "../lib/byeWeeks";
 
 function formatHeight(inches: number | null): string {
   if (inches === null) return "—";
@@ -26,6 +27,12 @@ export function ComparisonTable({ players, values, onRemove }: ComparisonTablePr
   }
 
   const maxValue = Math.max(...players.map((p) => values[p.playerId]?.value ?? -Infinity));
+
+  const byeCounts = new Map<number, number>();
+  for (const p of players) {
+    const bye = byeWeekFor(p.team);
+    if (bye !== null) byeCounts.set(bye, (byeCounts.get(bye) ?? 0) + 1);
+  }
 
   const rows: [string, (p: PlayerProfile) => ReactNode][] = [
     [
@@ -48,8 +55,36 @@ export function ComparisonTable({ players, values, onRemove }: ComparisonTablePr
         );
       },
     ],
+    ["Position Rank", (p) => (values[p.playerId] ? `${p.position}${values[p.playerId].positionRank}` : "—")],
+    [
+      "30-Day Trend",
+      (p) => {
+        const entry = values[p.playerId];
+        if (!entry) return "—";
+        if (entry.trend30Day === 0) return <span className="empty-state">Flat</span>;
+        const up = entry.trend30Day > 0;
+        return (
+          <span className={up ? "comparison-table__winner" : "error-text"}>
+            {up ? "▲" : "▼"} {Math.abs(entry.trend30Day).toLocaleString()}
+          </span>
+        );
+      },
+    ],
     ["Position", (p) => <PositionBadge position={p.position} />],
     ["Team", (p) => <TeamTag team={p.team} />],
+    [
+      "Bye Week",
+      (p) => {
+        const bye = byeWeekFor(p.team);
+        if (bye === null) return "—";
+        const stacked = (byeCounts.get(bye) ?? 0) > 1;
+        return <span className={stacked ? "error-text" : undefined}>{bye}{stacked ? " (stacked)" : ""}</span>;
+      },
+    ],
+    [
+      "Depth Chart",
+      (p) => (p.depthChartPosition ? `${p.depthChartPosition}${p.depthChartOrder ?? ""}` : "—"),
+    ],
     ["Age", (p) => p.age ?? "—"],
     ["Height/Weight", (p) => `${formatHeight(p.heightInches)}${p.weightLbs !== null ? ` / ${p.weightLbs} lb` : ""}`],
     ["College", (p) => p.college ?? "—"],

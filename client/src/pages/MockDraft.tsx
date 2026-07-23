@@ -9,6 +9,7 @@ import { DraftSettingsForm } from "../components/DraftSettingsForm";
 import { DraftBoardGrid } from "../components/DraftBoardGrid";
 import { DraftRosterPanel } from "../components/DraftRosterPanel";
 import { AvailablePlayersPanel } from "../components/AvailablePlayersPanel";
+import { FootballIcon } from "../components/FootballIcon";
 import type { DraftPick, DraftSettings } from "../types/draft";
 
 const BOT_PICK_DELAY_MS = 500;
@@ -123,6 +124,7 @@ export function MockDraft() {
       <div className="page">
         <div className="page-header">
           <h1>Mock Draft</h1>
+          <FootballIcon className="page-header__decoration" />
         </div>
         <DraftSettingsForm onStart={setSettings} />
       </div>
@@ -139,7 +141,7 @@ export function MockDraft() {
 
   if (draftComplete) {
     return (
-      <div className="page">
+      <div className="page page--wide">
         <div className="page-header">
           <h1>Draft Complete</h1>
           <button type="button" onClick={restart}>
@@ -173,7 +175,7 @@ export function MockDraft() {
   const userTeamPicks = picks.filter((p) => p.teamIndex === settings.userTeamIndex);
 
   return (
-    <div className="page">
+    <div className="page page--wide">
       <div className="page-header">
         <h1>Mock Draft</h1>
         <button type="button" onClick={restart}>

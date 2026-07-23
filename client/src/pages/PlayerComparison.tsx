@@ -3,16 +3,19 @@ import { useQuery } from "@tanstack/react-query";
 import { getPlayers } from "../api/players";
 import { getTradeValues } from "../api/tradeValues";
 import { ComparisonTable } from "../components/ComparisonTable";
+import { ComparisonModal } from "../components/ComparisonModal";
 import { PlayerSearchAdd } from "../components/PlayerSearchAdd";
+import { FootballIcon } from "../components/FootballIcon";
 import { FORMAT_PARAMS, type RankingFormat } from "../lib/rankingFormats";
 import type { PlayerProfile } from "../types/player";
 
-const MAX_PLAYERS = 4;
+const MAX_PLAYERS = 6;
 
 export function PlayerComparison() {
   const { data, isLoading, isError, error } = useQuery({ queryKey: ["players"], queryFn: getPlayers });
   const [format, setFormat] = useState<RankingFormat>("full");
   const [selected, setSelected] = useState<PlayerProfile[]>([]);
+  const [showFullComparison, setShowFullComparison] = useState(false);
 
   const { dynasty, ppr } = FORMAT_PARAMS[format];
   const { data: tradeValuesData } = useQuery({
@@ -28,6 +31,7 @@ export function PlayerComparison() {
     <div className="page">
       <div className="page-header">
         <h1>Player Comparison</h1>
+        <FootballIcon className="page-header__decoration" />
       </div>
 
       <div className="filter-bar">
@@ -37,6 +41,11 @@ export function PlayerComparison() {
           <option value="full">Full PPR</option>
           <option value="dynasty">Dynasty</option>
         </select>
+        {selected.length > 0 && (
+          <button type="button" onClick={() => setShowFullComparison(true)}>
+            Full Comparison
+          </button>
+        )}
       </div>
 
       {isLoading && <p>Loading players...</p>}
@@ -59,6 +68,10 @@ export function PlayerComparison() {
             onRemove={(id) => setSelected(selected.filter((p) => p.playerId !== id))}
           />
         </>
+      )}
+
+      {showFullComparison && (
+        <ComparisonModal players={selected} values={values} onClose={() => setShowFullComparison(false)} />
       )}
     </div>
   );

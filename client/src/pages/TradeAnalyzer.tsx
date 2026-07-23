@@ -4,6 +4,8 @@ import { getLeagueDetail, getLeagues } from "../api/leagues";
 import { getPlayers } from "../api/players";
 import { getTradeValues } from "../api/tradeValues";
 import { TradeSide, type TradeCandidate } from "../components/TradeSide";
+import { GoalPost } from "../components/GoalPost";
+import { TradeReviewModal } from "../components/TradeReviewModal";
 import type { Platform } from "../types/league";
 
 type Mode = "freeform" | "league";
@@ -16,6 +18,7 @@ export function TradeAnalyzer() {
   const [teamBId, setTeamBId] = useState("");
   const [freeformA, setFreeformA] = useState<TradeCandidate[]>([]);
   const [freeformB, setFreeformB] = useState<TradeCandidate[]>([]);
+  const [showReview, setShowReview] = useState(false);
 
   const { data: playersData } = useQuery({ queryKey: ["players"], queryFn: getPlayers });
   const { data: tradeValuesData } = useQuery({
@@ -71,6 +74,7 @@ export function TradeAnalyzer() {
     <div className="page">
       <div className="page-header">
         <h1>Trade Analyzer</h1>
+        <GoalPost className="page-header__decoration" />
       </div>
 
       <div className="filter-bar">
@@ -155,6 +159,24 @@ export function TradeAnalyzer() {
       </div>
 
       <div className={`trade-verdict ${verdictClass()}`}>{verdict()}</div>
+
+      {hasTrade && (
+        <div className="trade-review-trigger">
+          <button type="button" onClick={() => setShowReview(true)}>
+            Review Trade
+          </button>
+        </div>
+      )}
+
+      {showReview && (
+        <TradeReviewModal
+          sideA={sideA}
+          sideB={sideB}
+          values={values}
+          verdict={verdict()}
+          onClose={() => setShowReview(false)}
+        />
+      )}
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getTrendingPlayers } from "../api/trendingPlayers";
 import { TrendingTable } from "../components/TrendingTable";
+import { GoalPost } from "../components/GoalPost";
 
 type TrendType = "add" | "drop";
 const POSITIONS = ["QB", "RB", "WR", "TE", "K", "DEF"];
@@ -23,6 +24,7 @@ export function WaiverWire() {
     <div className="page">
       <div className="page-header">
         <h1>Waiver Wire</h1>
+        <GoalPost className="page-header__decoration" />
       </div>
       <p className="data-source-note">Live add/drop data via Sleeper, refreshed every 24h.</p>
 
