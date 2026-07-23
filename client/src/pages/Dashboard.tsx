@@ -3,9 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { getLeagues } from "../api/leagues";
 import { getPlayers } from "../api/players";
 import { getTradeValues } from "../api/tradeValues";
+import { getWatchlist } from "../api/watchlist";
 import { LeagueCard } from "../components/LeagueCard";
 import { PlayerAvatar } from "../components/PlayerAvatar";
 import { PositionBadge } from "../components/PositionBadge";
+import { PlayerDetailCard } from "../components/PlayerDetailCard";
 import { FootballIcon } from "../components/FootballIcon";
 import { StadiumLights } from "../components/StadiumLights";
 import { medalClass } from "../lib/medal";
@@ -19,6 +21,9 @@ export function Dashboard() {
     queryKey: ["trade-values", false, 1],
     queryFn: () => getTradeValues(false, 1),
   });
+  const { data: watchlistData } = useQuery({ queryKey: ["watchlist"], queryFn: getWatchlist });
+
+  const watchedPlayers = playersData?.players.filter((p) => watchlistData?.playerIds.includes(p.playerId)) ?? [];
 
   const topPlayers = playersData?.players
     .map((p) => ({ player: p, entry: tradeValuesData?.values[p.playerId] }))
@@ -67,6 +72,25 @@ export function Dashboard() {
             </div>
           </section>
         )}
+
+        <section>
+          <h2>Your Watchlist</h2>
+          {watchedPlayers.length === 0 ? (
+            <p className="empty-state">
+              Star a player anywhere on the site (Players, Waiver Wire, or their profile) to pin them here.
+            </p>
+          ) : (
+            <div className="watchlist-grid">
+              {watchedPlayers.map((player) => (
+                <PlayerDetailCard
+                  key={player.playerId}
+                  player={player}
+                  entry={tradeValuesData?.values[player.playerId]}
+                />
+              ))}
+            </div>
+          )}
+        </section>
 
         <div className="page-header">
           <h2>Your Leagues</h2>

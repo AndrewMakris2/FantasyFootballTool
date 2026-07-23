@@ -9,6 +9,7 @@ import { byeWeekFor } from "../lib/byeWeeks";
 import { medalClass } from "../lib/medal";
 import { teamColor } from "../lib/teamColors";
 import { TeamTag } from "../components/TeamTag";
+import { WatchlistButton } from "../components/WatchlistButton";
 
 function formatHeight(inches: number | null): string {
   if (inches === null) return "—";
@@ -90,6 +91,7 @@ export function PlayerProfile() {
             {player.jerseyNumber !== null && (
               <span className="player-profile__number">No. {player.jerseyNumber}</span>
             )}
+            <WatchlistButton playerId={player.playerId} />
           </h1>
           <div className="player-profile__meta">
             <PositionBadge position={player.position} />

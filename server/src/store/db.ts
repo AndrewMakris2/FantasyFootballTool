@@ -88,3 +88,20 @@ export async function deleteCustomRankingSet(name: string): Promise<void> {
   delete sets[name];
   await appStore().setJSON("customRankingSets", sets);
 }
+
+export async function getWatchlist(): Promise<string[]> {
+  return (await appStore().get("watchlist", { type: "json" })) ?? [];
+}
+
+export async function addToWatchlist(playerId: string): Promise<string[]> {
+  const ids = await getWatchlist();
+  if (!ids.includes(playerId)) ids.push(playerId);
+  await appStore().setJSON("watchlist", ids);
+  return ids;
+}
+
+export async function removeFromWatchlist(playerId: string): Promise<string[]> {
+  const ids = (await getWatchlist()).filter((id) => id !== playerId);
+  await appStore().setJSON("watchlist", ids);
+  return ids;
+}

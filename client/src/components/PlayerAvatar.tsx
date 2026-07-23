@@ -18,12 +18,20 @@ function initials(name: string): string {
 export function PlayerAvatar({ playerId, name, position, team, size = "md", ringColor }: PlayerAvatarProps) {
   const [errored, setErrored] = useState(false);
 
+  const ringStyle = ringColor ? { borderColor: ringColor, boxShadow: `0 0 24px ${ringColor}66` } : undefined;
+
+  if (position === "PICK") {
+    return (
+      <div className={`player-avatar player-avatar--${size} player-avatar--fallback`} style={ringStyle}>
+        PK
+      </div>
+    );
+  }
+
   const src =
     position === "DEF" && team
       ? `https://sleepercdn.com/images/team_logos/nfl/${team.toLowerCase()}.png`
       : `https://sleepercdn.com/content/nfl/players/thumb/${playerId}.jpg`;
-
-  const ringStyle = ringColor ? { borderColor: ringColor, boxShadow: `0 0 24px ${ringColor}66` } : undefined;
 
   if (errored) {
     return (

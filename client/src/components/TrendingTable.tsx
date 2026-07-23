@@ -3,6 +3,7 @@ import type { TrendingPlayer } from "../api/trendingPlayers";
 import { PositionBadge } from "./PositionBadge";
 import { PlayerAvatar } from "./PlayerAvatar";
 import { TeamTag } from "./TeamTag";
+import { WatchlistButton } from "./WatchlistButton";
 
 interface TrendingTableProps {
   players: TrendingPlayer[];
@@ -35,16 +36,19 @@ export function TrendingTable({ players, type }: TrendingTableProps) {
           <tr key={player.playerId}>
             <td>{index + 1}</td>
             <td>
-              <Link to={`/players/${player.playerId}`} className="table-player-link">
-                <PlayerAvatar
-                  playerId={player.playerId}
-                  name={player.name}
-                  position={player.position}
-                  team={player.team}
-                  size="sm"
-                />
-                <span>{player.name}</span>
-              </Link>
+              <div className="table-player-cell">
+                <WatchlistButton playerId={player.playerId} />
+                <Link to={`/players/${player.playerId}`} className="table-player-link">
+                  <PlayerAvatar
+                    playerId={player.playerId}
+                    name={player.name}
+                    position={player.position}
+                    team={player.team}
+                    size="sm"
+                  />
+                  <span>{player.name}</span>
+                </Link>
+              </div>
             </td>
             <td><PositionBadge position={player.position} /></td>
             <td><TeamTag team={player.team} /></td>

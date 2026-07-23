@@ -325,6 +325,10 @@ section {
   background: var(--pos-def);
 }
 
+.position-badge--PICK {
+  background: #b8860b;
+}
+
 /* Team tag */
 
 .team-tag {
@@ -1008,6 +1012,45 @@ select:focus {
 
 .table-player-link:hover {
   color: var(--accent-2);
+}
+
+.table-player-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.watchlist-button {
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0.1rem 0.2rem;
+  color: var(--muted);
+  font-size: 1.15rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.watchlist-button:hover {
+  color: var(--warning);
+  filter: none;
+  transform: none;
+}
+
+.watchlist-button--active {
+  color: var(--warning);
+}
+
+h1 .watchlist-button {
+  font-size: 1.3rem;
+  vertical-align: middle;
+  margin-left: 0.4rem;
+}
+
+.watchlist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
 }
 
 /* Hero */

@@ -39,6 +39,8 @@ interface PlayerDetailCardProps {
 
 export function PlayerDetailCard({ player, entry, label }: PlayerDetailCardProps) {
   const bye = byeWeekFor(player.team);
+  const isPick = player.position === "PICK";
+
   return (
     <div className="player-detail-card">
       {label && <span className="player-detail-card__label">{label}</span>}
@@ -52,18 +54,30 @@ export function PlayerDetailCard({ player, entry, label }: PlayerDetailCardProps
           ringColor={teamColor(player.team)}
         />
         <div>
-          <Link to={`/players/${player.playerId}`} className="player-detail-card__name">
-            {player.name}
-          </Link>
+          {isPick ? (
+            <span className="player-detail-card__name">{player.name}</span>
+          ) : (
+            <Link to={`/players/${player.playerId}`} className="player-detail-card__name">
+              {player.name}
+            </Link>
+          )}
           <div className="player-detail-card__meta">
             <PositionBadge position={player.position} />
-            <TeamTag team={player.team} />
+            {!isPick && <TeamTag team={player.team} />}
             {player.injuryStatus && <span className="injury-badge">{player.injuryStatus}</span>}
           </div>
         </div>
       </div>
 
-      <div className="player-detail-card__grid">
+      {isPick ? (
+        <div className="player-detail-card__grid">
+          <div>
+            <span className="player-detail-card__stat-label">Estimated Value</span>
+            <span>{entry ? entry.value.toLocaleString() : "—"}</span>
+          </div>
+        </div>
+      ) : (
+        <div className="player-detail-card__grid">
         <div>
           <span className="player-detail-card__stat-label">Rank</span>
           <span className={medalClass(entry?.overallRank)}>{entry ? `#${entry.overallRank}` : "Unranked"}</span>
@@ -114,6 +128,7 @@ export function PlayerDetailCard({ player, entry, label }: PlayerDetailCardProps
           <span>{player.yearsExp !== null && player.yearsExp !== undefined ? `${player.yearsExp} yrs` : "—"}</span>
         </div>
       </div>
+      )}
     </div>
   );
 }

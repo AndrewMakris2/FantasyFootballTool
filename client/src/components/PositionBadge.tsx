@@ -1,4 +1,4 @@
-const KNOWN_POSITIONS = new Set(["QB", "RB", "WR", "TE", "K", "DEF"]);
+const KNOWN_POSITIONS = new Set(["QB", "RB", "WR", "TE", "K", "DEF", "PICK"]);
 
 export function PositionBadge({ position }: { position: string }) {
   const variant = KNOWN_POSITIONS.has(position) ? position : "UNK";

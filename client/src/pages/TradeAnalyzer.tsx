@@ -6,7 +6,9 @@ import { getTradeValues } from "../api/tradeValues";
 import { TradeSide, type TradeCandidate } from "../components/TradeSide";
 import { GoalPost } from "../components/GoalPost";
 import { TradeReviewModal } from "../components/TradeReviewModal";
+import { generateDraftPickAssets } from "../lib/draftPicks";
 import type { Platform } from "../types/league";
+import type { TradeValueEntry } from "../types/tradeValue";
 
 type Mode = "freeform" | "league";
 
@@ -38,8 +40,21 @@ export function TradeAnalyzer() {
     enabled: mode === "league" && Boolean(platform && leagueId),
   });
 
-  const values = tradeValuesData?.values ?? {};
-  const candidates: TradeCandidate[] = playersData?.players ?? [];
+  const pickAssets = useMemo(() => generateDraftPickAssets(), []);
+  const pickCandidates: TradeCandidate[] = useMemo(
+    () => pickAssets.map((asset) => ({ playerId: asset.id, name: asset.label, position: "PICK", team: null })),
+    [pickAssets],
+  );
+  const pickValues = useMemo(() => {
+    const map: Record<string, TradeValueEntry> = {};
+    for (const asset of pickAssets) {
+      map[asset.id] = { sleeperId: asset.id, value: asset.value, overallRank: 0, positionRank: 0, trend30Day: 0 };
+    }
+    return map;
+  }, [pickAssets]);
+
+  const values = { ...(tradeValuesData?.values ?? {}), ...pickValues };
+  const candidates: TradeCandidate[] = [...(playersData?.players ?? []), ...pickCandidates];
 
   const teamA = leagueDetail?.teams.find((t) => t.teamId === teamAId);
   const teamB = leagueDetail?.teams.find((t) => t.teamId === teamBId);

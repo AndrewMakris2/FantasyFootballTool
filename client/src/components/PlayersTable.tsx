@@ -4,6 +4,7 @@ import type { TradeValueEntry } from "../types/tradeValue";
 import { PositionBadge } from "./PositionBadge";
 import { PlayerAvatar } from "./PlayerAvatar";
 import { TeamTag } from "./TeamTag";
+import { WatchlistButton } from "./WatchlistButton";
 import { medalClass } from "../lib/medal";
 
 function formatHeight(inches: number | null): string {
@@ -46,21 +47,24 @@ export function PlayersTable({ players, values }: PlayersTableProps) {
             return (
               <tr key={player.playerId}>
                 <td>
-                  <Link to={`/players/${player.playerId}`} className="table-player-link">
-                    <PlayerAvatar
-                      playerId={player.playerId}
-                      name={player.name}
-                      position={player.position}
-                      team={player.team}
-                      size="sm"
-                    />
-                    <span>
-                      {player.name}
-                      {player.jerseyNumber !== null && (
-                        <span className="players-table__number"> No. {player.jerseyNumber}</span>
-                      )}
-                    </span>
-                  </Link>
+                  <div className="table-player-cell">
+                    <WatchlistButton playerId={player.playerId} />
+                    <Link to={`/players/${player.playerId}`} className="table-player-link">
+                      <PlayerAvatar
+                        playerId={player.playerId}
+                        name={player.name}
+                        position={player.position}
+                        team={player.team}
+                        size="sm"
+                      />
+                      <span>
+                        {player.name}
+                        {player.jerseyNumber !== null && (
+                          <span className="players-table__number"> No. {player.jerseyNumber}</span>
+                        )}
+                      </span>
+                    </Link>
+                  </div>
                 </td>
                 <td>
                   {entry ? <span className={medalClass(entry.overallRank)}>#{entry.overallRank}</span> : "—"}
