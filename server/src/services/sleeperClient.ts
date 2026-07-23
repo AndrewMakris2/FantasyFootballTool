@@ -128,16 +128,23 @@ function toPlayerProfile(playerId: string, meta: SleeperPlayerMeta): PlayerProfi
   };
 }
 
+// Same "is this a real, current NFL roster player" check used everywhere we surface a
+// player list — keeps the Player Database and Waiver Wire consistent instead of one
+// filtering out inactive/free-agent players and the other not.
+function isFantasyRelevant(meta: SleeperPlayerMeta): boolean {
+  const isActive = meta.position === "DEF" ? meta.active === true : meta.status === "Active";
+  if (!isActive) return false;
+  if (!meta.team) return false;
+  if (!meta.position || !FANTASY_POSITIONS.has(meta.position)) return false;
+  return true;
+}
+
 export async function getFantasyRelevantPlayers(): Promise<PlayerProfile[]> {
   const playersMap = await getPlayersMap();
   const profiles: PlayerProfile[] = [];
 
   for (const [playerId, meta] of Object.entries(playersMap)) {
-    const isActive = meta.position === "DEF" ? meta.active === true : meta.status === "Active";
-    if (!isActive) continue;
-    if (!meta.team) continue;
-    if (!meta.position || !FANTASY_POSITIONS.has(meta.position)) continue;
-
+    if (!isFantasyRelevant(meta)) continue;
     profiles.push(toPlayerProfile(playerId, meta));
   }
 
@@ -153,16 +160,19 @@ export async function getTrendingPlayers(
   type: "add" | "drop",
   limit = 25,
 ): Promise<(PlayerProfile & { trendCount: number })[]> {
+  // Sleeper's trending endpoint includes inactive/free-agent players (whoever's being
+  // added/dropped across all leagues), so over-fetch and filter+trim to `limit` after.
   const [trending, playersMap] = await Promise.all([
-    sleeperGet<SleeperTrendingEntry[]>(`/players/nfl/trending/${type}?lookback_hours=24&limit=${limit}`),
+    sleeperGet<SleeperTrendingEntry[]>(`/players/nfl/trending/${type}?lookback_hours=24&limit=${limit * 4}`),
     getPlayersMap(),
   ]);
 
   const results: (PlayerProfile & { trendCount: number })[] = [];
   for (const entry of trending) {
     const meta = playersMap[entry.player_id];
-    if (!meta) continue;
+    if (!meta || !isFantasyRelevant(meta)) continue;
     results.push({ ...toPlayerProfile(entry.player_id, meta), trendCount: entry.count });
+    if (results.length >= limit) break;
   }
   return results;
 }

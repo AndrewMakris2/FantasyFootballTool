@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getPlayers } from "../api/players";
 import { getTradeValues } from "../api/tradeValues";
@@ -26,6 +26,7 @@ const FORMATS: { key: keyof typeof FORMAT_PARAMS; label: string }[] = [
 
 export function PlayerProfile() {
   const { playerId } = useParams<{ playerId: string }>();
+  const navigate = useNavigate();
 
   const { data: playersData, isLoading } = useQuery({ queryKey: ["players"], queryFn: getPlayers });
   const player = playersData?.players.find((p) => p.playerId === playerId);
@@ -47,7 +48,7 @@ export function PlayerProfile() {
     queryFn: () => getTradeValues(true, 1),
   });
 
-  const valuesByFormat = { standard: standard.data, half: half.data, full: full.data, dynasty: dynasty.data };
+  const queriesByFormat = { standard, half, full, dynasty };
 
   if (isLoading) {
     return (
@@ -60,9 +61,9 @@ export function PlayerProfile() {
   if (!player) {
     return (
       <div className="page">
-        <Link to="/players" className="back-link">
+        <button type="button" className="back-link" onClick={() => navigate(-1)}>
           &larr; Back to players
-        </Link>
+        </button>
         <p className="error-text">Player not found.</p>
       </div>
     );
@@ -70,9 +71,9 @@ export function PlayerProfile() {
 
   return (
     <div className="page">
-      <Link to="/players" className="back-link">
+      <button type="button" className="back-link" onClick={() => navigate(-1)}>
         &larr; Back to players
-      </Link>
+      </button>
 
       <div className="player-profile__header">
         <PlayerAvatar
@@ -86,7 +87,9 @@ export function PlayerProfile() {
         <div>
           <h1>
             {player.name}
-            {player.jerseyNumber !== null && <span className="player-profile__number">#{player.jerseyNumber}</span>}
+            {player.jerseyNumber !== null && (
+              <span className="player-profile__number">No. {player.jerseyNumber}</span>
+            )}
           </h1>
           <div className="player-profile__meta">
             <PositionBadge position={player.position} />
@@ -123,13 +126,17 @@ export function PlayerProfile() {
       </div>
 
       <h2>Rankings by Format</h2>
+      <p className="data-source-note">Trade values via FantasyCalc.</p>
       <div className="ranking-cards">
         {FORMATS.map(({ key, label }) => {
-          const entry = valuesByFormat[key]?.values[player.playerId];
+          const query = queriesByFormat[key];
+          const entry = query.data?.values[player.playerId];
           return (
             <div key={key} className="ranking-card">
               <span className="ranking-card__label">{label}</span>
-              {entry ? (
+              {query.isLoading ? (
+                <span className="ranking-card__unranked">Loading…</span>
+              ) : entry ? (
                 <>
                   <span className={`ranking-card__rank ${medalClass(entry.overallRank)}`}>#{entry.overallRank}</span>
                   <span className="ranking-card__value">{entry.value.toLocaleString()}</span>

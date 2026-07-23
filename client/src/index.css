@@ -393,6 +393,33 @@ span.rank-medal--bronze {
   border-bottom: none;
 }
 
+.data-table-scroll {
+  overflow-x: auto;
+  border-radius: var(--radius-lg);
+}
+
+.data-table-scroll .data-table th,
+.data-table-scroll .data-table td {
+  white-space: nowrap;
+}
+
+/* Keeps the player-name column visible while scrolling wide tables horizontally
+   on narrow screens, so you don't lose track of which row you're on. */
+.data-table-scroll--frozen-first .data-table th:first-child,
+.data-table-scroll--frozen-first .data-table td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+.data-table-scroll--frozen-first .data-table th:first-child {
+  background: var(--surface-2);
+}
+
+.data-table-scroll--frozen-first .data-table td:first-child {
+  background: var(--surface);
+}
+
 .trending-count {
   color: var(--accent-2);
   font-weight: 700;
@@ -412,6 +439,12 @@ span.rank-medal--bronze {
   color: var(--muted);
 }
 
+.data-source-note {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin: -0.5rem 0 1rem;
+}
+
 .error-text {
   color: var(--danger);
 }
@@ -426,15 +459,22 @@ span.rank-medal--bronze {
 }
 
 .back-link {
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
   color: var(--muted);
   text-decoration: none;
   display: inline-block;
   margin-bottom: 1rem;
   font-weight: 600;
+  font-size: 1rem;
 }
 
 .back-link:hover {
   color: var(--text);
+  filter: none;
+  transform: none;
 }
 
 /* Buttons + inputs */

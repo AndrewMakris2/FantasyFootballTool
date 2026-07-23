@@ -4,10 +4,17 @@ import { PositionBadge } from "./PositionBadge";
 import { PlayerAvatar } from "./PlayerAvatar";
 import { TeamTag } from "./TeamTag";
 
-export function TrendingTable({ players }: { players: TrendingPlayer[] }) {
+interface TrendingTableProps {
+  players: TrendingPlayer[];
+  type: "add" | "drop";
+}
+
+export function TrendingTable({ players, type }: TrendingTableProps) {
   if (players.length === 0) {
     return <p className="empty-state">No trending data available.</p>;
   }
+
+  const countLabel = type === "add" ? "Leagues Adding (24h)" : "Leagues Dropping (24h)";
 
   return (
     <table className="data-table">
@@ -17,7 +24,9 @@ export function TrendingTable({ players }: { players: TrendingPlayer[] }) {
           <th>Player</th>
           <th>Pos</th>
           <th>Team</th>
-          <th>Trend (24h)</th>
+          <th title="Number of Sleeper leagues where this player was added/dropped in the last 24 hours">
+            {countLabel}
+          </th>
           <th>Status</th>
         </tr>
       </thead>

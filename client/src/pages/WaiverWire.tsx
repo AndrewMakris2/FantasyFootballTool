@@ -24,6 +24,7 @@ export function WaiverWire() {
       <div className="page-header">
         <h1>Waiver Wire</h1>
       </div>
+      <p className="data-source-note">Live add/drop data via Sleeper, refreshed every 24h.</p>
 
       <div className="filter-bar">
         <select value={type} onChange={(e) => setType(e.target.value as TrendType)}>
@@ -43,7 +44,7 @@ export function WaiverWire() {
       {isLoading && <p>Loading trends...</p>}
       {isError && <p className="error-text">{(error as Error).message}</p>}
 
-      {data && <TrendingTable players={filtered} />}
+      {data && <TrendingTable players={filtered} type={type} />}
     </div>
   );
 }

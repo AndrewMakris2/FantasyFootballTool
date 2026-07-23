@@ -12,10 +12,31 @@ import { AvailablePlayersPanel } from "../components/AvailablePlayersPanel";
 import type { DraftPick, DraftSettings } from "../types/draft";
 
 const BOT_PICK_DELAY_MS = 500;
+const STORAGE_KEY = "mockDraft.state";
+
+interface StoredDraftState {
+  settings: DraftSettings | null;
+  picks: DraftPick[];
+}
+
+function loadStoredDraft(): StoredDraftState {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as StoredDraftState) : { settings: null, picks: [] };
+  } catch {
+    return { settings: null, picks: [] };
+  }
+}
 
 export function MockDraft() {
-  const [settings, setSettings] = useState<DraftSettings | null>(null);
-  const [picks, setPicks] = useState<DraftPick[]>([]);
+  const [settings, setSettings] = useState<DraftSettings | null>(() => loadStoredDraft().settings);
+  const [picks, setPicks] = useState<DraftPick[]>(() => loadStoredDraft().picks);
+
+  // Persist so an in-progress draft survives navigating to another tab and back —
+  // component state alone doesn't since this route unmounts when you leave it.
+  useEffect(() => {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ settings, picks }));
+  }, [settings, picks]);
 
   const { data: playersData } = useQuery({
     queryKey: ["players"],
@@ -94,6 +115,7 @@ export function MockDraft() {
   function restart() {
     setSettings(null);
     setPicks([]);
+    sessionStorage.removeItem(STORAGE_KEY);
   }
 
   if (!settings) {

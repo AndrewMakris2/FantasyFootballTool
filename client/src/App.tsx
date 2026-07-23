@@ -10,6 +10,7 @@ import { WaiverWire } from "./pages/WaiverWire";
 import { PlayerProfile } from "./pages/PlayerProfile";
 import { MockDraft } from "./pages/MockDraft";
 import { ImportRankings } from "./pages/ImportRankings";
+import { NotFound } from "./pages/NotFound";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
         <Route path="/waiver-wire" element={<WaiverWire />} />
         <Route path="/mock-draft" element={<MockDraft />} />
         <Route path="/import-rankings" element={<ImportRankings />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   );

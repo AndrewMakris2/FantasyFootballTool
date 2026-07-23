@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getPlayers } from "../api/players";
 import { getTradeValues } from "../api/tradeValues";
@@ -9,13 +10,24 @@ const POSITIONS = ["QB", "RB", "WR", "TE", "K", "DEF"];
 
 export function Players() {
   const { data, isLoading, isError, error } = useQuery({ queryKey: ["players"], queryFn: getPlayers });
-  const [search, setSearch] = useState("");
-  const [position, setPosition] = useState("ALL");
-  const [team, setTeam] = useState("ALL");
-  const [format, setFormat] = useState<RankingFormat>("full");
-  const [health, setHealth] = useState("ALL");
-  const [rookiesOnly, setRookiesOnly] = useState(false);
-  const [rankedOnly, setRankedOnly] = useState(false);
+
+  // Filters live in the URL (not component state) so they survive navigating to a
+  // player profile and back with the browser/back-link, instead of resetting.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.get("q") ?? "";
+  const position = searchParams.get("pos") ?? "ALL";
+  const team = searchParams.get("team") ?? "ALL";
+  const format = (searchParams.get("format") as RankingFormat | null) ?? "full";
+  const health = searchParams.get("health") ?? "ALL";
+  const rookiesOnly = searchParams.get("rookies") === "1";
+  const rankedOnly = searchParams.get("ranked") === "1";
+
+  function setParam(key: string, value: string | null) {
+    const next = new URLSearchParams(searchParams);
+    if (value === null || value === "") next.delete(key);
+    else next.set(key, value);
+    setSearchParams(next, { replace: true });
+  }
 
   const { dynasty, ppr } = FORMAT_PARAMS[format];
   const { data: tradeValuesData } = useQuery({
@@ -56,15 +68,16 @@ export function Players() {
       <div className="page-header">
         <h1>Player Database</h1>
       </div>
+      <p className="data-source-note">Live player data via Sleeper &middot; trade values via FantasyCalc.</p>
 
       <div className="filter-bar">
         <input
           type="text"
           placeholder="Search by name..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => setParam("q", e.target.value)}
         />
-        <select value={position} onChange={(e) => setPosition(e.target.value)}>
+        <select value={position} onChange={(e) => setParam("pos", e.target.value === "ALL" ? null : e.target.value)}>
           <option value="ALL">All positions</option>
           {POSITIONS.map((pos) => (
             <option key={pos} value={pos}>
@@ -72,7 +85,7 @@ export function Players() {
             </option>
           ))}
         </select>
-        <select value={team} onChange={(e) => setTeam(e.target.value)}>
+        <select value={team} onChange={(e) => setParam("team", e.target.value === "ALL" ? null : e.target.value)}>
           <option value="ALL">All teams</option>
           {teams.map((t) => (
             <option key={t} value={t}>
@@ -80,7 +93,7 @@ export function Players() {
             </option>
           ))}
         </select>
-        <select value={format} onChange={(e) => setFormat(e.target.value as RankingFormat)}>
+        <select value={format} onChange={(e) => setParam("format", e.target.value === "full" ? null : e.target.value)}>
           <option value="standard">Standard</option>
           <option value="half">Half PPR</option>
           <option value="full">Full PPR</option>
@@ -89,17 +102,25 @@ export function Players() {
       </div>
 
       <div className="filter-bar filter-bar--secondary">
-        <select value={health} onChange={(e) => setHealth(e.target.value)}>
+        <select value={health} onChange={(e) => setParam("health", e.target.value === "ALL" ? null : e.target.value)}>
           <option value="ALL">Any health status</option>
           <option value="HEALTHY">Healthy only</option>
           <option value="INJURED">Injured / questionable</option>
         </select>
         <label className="filter-toggle">
-          <input type="checkbox" checked={rookiesOnly} onChange={(e) => setRookiesOnly(e.target.checked)} />
+          <input
+            type="checkbox"
+            checked={rookiesOnly}
+            onChange={(e) => setParam("rookies", e.target.checked ? "1" : null)}
+          />
           Rookies only
         </label>
         <label className="filter-toggle">
-          <input type="checkbox" checked={rankedOnly} onChange={(e) => setRankedOnly(e.target.checked)} />
+          <input
+            type="checkbox"
+            checked={rankedOnly}
+            onChange={(e) => setParam("ranked", e.target.checked ? "1" : null)}
+          />
           Ranked only
         </label>
       </div>

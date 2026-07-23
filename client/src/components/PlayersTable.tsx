@@ -24,67 +24,69 @@ export function PlayersTable({ players, values }: PlayersTableProps) {
   }
 
   return (
-    <table className="data-table">
-      <thead>
-        <tr>
-          <th>Player</th>
-          <th>Rank</th>
-          <th>Value</th>
-          <th>Pos</th>
-          <th>Team</th>
-          <th>Age</th>
-          <th>Ht/Wt</th>
-          <th>College</th>
-          <th>Exp</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {players.map((player) => {
-          const entry = values[player.playerId];
-          return (
-            <tr key={player.playerId}>
-              <td>
-                <Link to={`/players/${player.playerId}`} className="table-player-link">
-                  <PlayerAvatar
-                    playerId={player.playerId}
-                    name={player.name}
-                    position={player.position}
-                    team={player.team}
-                    size="sm"
-                  />
-                  <span>
-                    {player.name}
-                    {player.jerseyNumber !== null && (
-                      <span className="players-table__number"> #{player.jerseyNumber}</span>
-                    )}
-                  </span>
-                </Link>
-              </td>
-              <td>
-                {entry ? <span className={medalClass(entry.overallRank)}>#{entry.overallRank}</span> : "—"}
-              </td>
-              <td>{entry ? entry.value.toLocaleString() : "Unranked"}</td>
-              <td><PositionBadge position={player.position} /></td>
-              <td><TeamTag team={player.team} /></td>
-              <td>{player.age ?? "—"}</td>
-              <td>
-                {formatHeight(player.heightInches)}
-                {player.weightLbs !== null ? ` / ${player.weightLbs} lb` : ""}
-              </td>
-              <td>{player.college ?? "—"}</td>
-              <td>{player.yearsExp ?? "—"}</td>
-              <td>
-                {player.injuryStatus ? (
-                  <span className="injury-badge">{player.injuryStatus}</span>
-                ) : (
-                  "Healthy"
-                )}
-              </td>
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
+    <div className="data-table-scroll data-table-scroll--frozen-first">
+      <table className="data-table">
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th>Rank</th>
+            <th>Value</th>
+            <th>Pos</th>
+            <th>Team</th>
+            <th>Age</th>
+            <th>Ht/Wt</th>
+            <th>College</th>
+            <th>Exp</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {players.map((player) => {
+            const entry = values[player.playerId];
+            return (
+              <tr key={player.playerId}>
+                <td>
+                  <Link to={`/players/${player.playerId}`} className="table-player-link">
+                    <PlayerAvatar
+                      playerId={player.playerId}
+                      name={player.name}
+                      position={player.position}
+                      team={player.team}
+                      size="sm"
+                    />
+                    <span>
+                      {player.name}
+                      {player.jerseyNumber !== null && (
+                        <span className="players-table__number"> No. {player.jerseyNumber}</span>
+                      )}
+                    </span>
+                  </Link>
+                </td>
+                <td>
+                  {entry ? <span className={medalClass(entry.overallRank)}>#{entry.overallRank}</span> : "—"}
+                </td>
+                <td>{entry ? entry.value.toLocaleString() : "Unranked"}</td>
+                <td><PositionBadge position={player.position} /></td>
+                <td><TeamTag team={player.team} /></td>
+                <td>{player.age ?? "—"}</td>
+                <td>
+                  {formatHeight(player.heightInches)}
+                  {player.weightLbs !== null ? ` / ${player.weightLbs} lb` : ""}
+                </td>
+                <td>{player.college ?? "—"}</td>
+                <td>{player.yearsExp ?? "—"}</td>
+                <td>
+                  {player.injuryStatus ? (
+                    <span className="injury-badge">{player.injuryStatus}</span>
+                  ) : (
+                    "Healthy"
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }

@@ -44,6 +44,7 @@ export function Dashboard() {
         {topPlayers && topPlayers.length > 0 && (
           <section>
             <h2>Top Fantasy Players</h2>
+            <p className="data-source-note">Trade values via FantasyCalc.</p>
             <div className="top-players-strip">
               {topPlayers.map(({ player, entry }) => (
                 <Link key={player.playerId} to={`/players/${player.playerId}`} className="top-player-card">

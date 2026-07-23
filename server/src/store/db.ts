@@ -11,7 +11,12 @@ export interface YahooTokens {
 const STORE_NAME = "app-data";
 
 function appStore() {
-  const context = Netlify.context?.deploy?.context;
+  // `Netlify.context` is an ambient global that's only reliably populated for Edge
+  // Functions — for regular Functions like these it can be null, which made this
+  // silently fall through to a deploy-scoped store (a different, empty one on every
+  // deploy) instead of the persistent production store. `Netlify.env.get("CONTEXT")`
+  // is the documented, reliably-set build/runtime env var for this.
+  const context = Netlify.env.get("CONTEXT");
   if (context === "production") {
     return getStore(STORE_NAME);
   }
