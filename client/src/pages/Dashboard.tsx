@@ -7,6 +7,7 @@ import { LeagueCard } from "../components/LeagueCard";
 import { PlayerAvatar } from "../components/PlayerAvatar";
 import { PositionBadge } from "../components/PositionBadge";
 import { FootballIcon } from "../components/FootballIcon";
+import { StadiumLights } from "../components/StadiumLights";
 import { medalClass } from "../lib/medal";
 
 const TOP_PLAYERS_COUNT = 10;
@@ -29,6 +30,7 @@ export function Dashboard() {
     <>
       <div className="hero">
         <div className="hero__field" />
+        <StadiumLights className="hero__lights" />
         <FootballIcon className="hero__football hero__football--left" />
         <FootballIcon className="hero__football hero__football--right" />
         <div className="hero__content">

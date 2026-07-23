@@ -4,6 +4,7 @@ import { getLeagueDetail } from "../api/leagues";
 import { RosterTable } from "../components/RosterTable";
 import { StandingsTable } from "../components/StandingsTable";
 import { PlatformBadge } from "../components/PlatformBadge";
+import { StadiumLights } from "../components/StadiumLights";
 import type { Platform } from "../types/league";
 
 export function LeagueDetail() {
@@ -29,6 +30,7 @@ export function LeagueDetail() {
             <h1>
               {data.name} <PlatformBadge platform={data.platform} />
             </h1>
+            <StadiumLights className="page-header__decoration" />
           </div>
 
           {data.currentMatchup && (

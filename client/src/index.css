@@ -1045,6 +1045,16 @@ select:focus {
   animation: hero-football-float 8s ease-in-out infinite;
 }
 
+.hero__lights {
+  position: absolute;
+  top: 4%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 220px;
+  opacity: 0.14;
+  filter: drop-shadow(0 0 20px var(--accent-glow));
+}
+
 .hero__football--left {
   top: 10%;
   left: -3%;

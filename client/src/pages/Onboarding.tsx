@@ -8,6 +8,7 @@ import {
   previewYahooLeagues,
 } from "../api/leagues";
 import { getYahooStatus } from "../api/leagues";
+import { Pennant } from "../components/Pennant";
 
 export function Onboarding() {
   const navigate = useNavigate();
@@ -56,7 +57,10 @@ export function Onboarding() {
 
   return (
     <div className="page">
-      <h1>Connect your leagues</h1>
+      <div className="page-header">
+        <h1>Connect your leagues</h1>
+        <Pennant className="page-header__decoration" />
+      </div>
 
       <section className="onboarding-section onboarding-section--sleeper">
         <h2>Sleeper</h2>
