@@ -5,9 +5,9 @@ import { getTradeValues } from "../api/tradeValues";
 import { FORMAT_PARAMS } from "../lib/rankingFormats";
 import { buildPickOrder, chooseBestPick, slotForManualPick, totalRounds } from "../lib/mockDraftEngine";
 import { DraftSettingsForm } from "../components/DraftSettingsForm";
-import { DraftLog } from "../components/DraftLog";
+import { DraftBoardGrid } from "../components/DraftBoardGrid";
 import { DraftRosterPanel } from "../components/DraftRosterPanel";
-import { PlayerSearchAdd } from "../components/PlayerSearchAdd";
+import { AvailablePlayersPanel } from "../components/AvailablePlayersPanel";
 import type { DraftPick, DraftSettings } from "../types/draft";
 
 const BOT_PICK_DELAY_MS = 500;
@@ -33,9 +33,11 @@ export function MockDraft() {
   const values = valuesData?.values ?? {};
   const playersById = useMemo(() => new Map(players.map((p) => [p.playerId, p])), [players]);
 
+  const rounds = settings ? totalRounds(settings.rosterSlots) : 0;
   const pickOrder = useMemo(() => {
     if (!settings) return [];
-    return buildPickOrder(settings.numTeams, totalRounds(settings.rosterSlots));
+    return buildPickOrder(settings.numTeams, rounds);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings]);
 
   const draftedIds = useMemo(() => new Set(picks.map((p) => p.playerId)), [picks]);
@@ -72,6 +74,11 @@ export function MockDraft() {
     return `Team ${teamIndex + 1}`;
   }
 
+  function restart() {
+    setSettings(null);
+    setPicks([]);
+  }
+
   if (!settings) {
     return (
       <div className="page">
@@ -96,10 +103,18 @@ export function MockDraft() {
       <div className="page">
         <div className="page-header">
           <h1>Draft Complete</h1>
-          <button type="button" onClick={() => { setSettings(null); setPicks([]); }}>
+          <button type="button" onClick={restart}>
             New Draft
           </button>
         </div>
+        <DraftBoardGrid
+          numTeams={settings.numTeams}
+          rounds={rounds}
+          picks={picks}
+          currentPick={undefined}
+          playersById={playersById}
+          teamLabel={teamLabel}
+        />
         <div className="draft-summary-grid">
           {Array.from({ length: settings.numTeams }, (_, teamIndex) => (
             <div key={teamIndex} className="draft-summary-team">
@@ -122,7 +137,7 @@ export function MockDraft() {
     <div className="page">
       <div className="page-header">
         <h1>Mock Draft</h1>
-        <button type="button" onClick={() => { setSettings(null); setPicks([]); }}>
+        <button type="button" onClick={restart}>
           Restart
         </button>
       </div>
@@ -132,19 +147,21 @@ export function MockDraft() {
         <strong>{teamLabel(currentPick.teamIndex)}</strong>
       </div>
 
+      <DraftBoardGrid
+        numTeams={settings.numTeams}
+        rounds={rounds}
+        picks={picks}
+        currentPick={currentPick}
+        playersById={playersById}
+        teamLabel={teamLabel}
+      />
+
       <div className="draft-layout">
         <div>
           <h2>Your Roster</h2>
           <DraftRosterPanel picks={userTeamPicks} rosterSlots={settings.rosterSlots} playersById={playersById} />
-
           {!isBotTurn && (
             <div className="draft-pick-controls">
-              <PlayerSearchAdd
-                candidates={availablePlayers}
-                excludeIds={draftedIds}
-                onAdd={(p) => makePick(p.playerId)}
-                placeholder="Search to draft a player..."
-              />
               <button
                 type="button"
                 onClick={() => {
@@ -159,8 +176,13 @@ export function MockDraft() {
         </div>
 
         <div>
-          <h2>Draft Log</h2>
-          <DraftLog picks={picks} playersById={playersById} teamLabel={teamLabel} />
+          <h2>Available Players</h2>
+          <AvailablePlayersPanel
+            players={availablePlayers}
+            values={values}
+            onDraft={makePick}
+            canDraft={!isBotTurn}
+          />
         </div>
       </div>
     </div>
