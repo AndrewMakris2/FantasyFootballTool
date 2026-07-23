@@ -31,7 +31,7 @@ export function Dashboard() {
     .slice(0, TOP_PLAYERS_COUNT);
 
   return (
-    <div className="page page--wide">
+    <div className="page page--wide page--bg-dashboard">
       <div className="page-header">
         <h1>Dashboard</h1>
         <Link to="/onboarding" className="button-link">

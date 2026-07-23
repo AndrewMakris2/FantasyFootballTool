@@ -120,7 +120,7 @@ export function MockDraft() {
 
   if (!settings) {
     return (
-      <div className="page">
+      <div className="page page--bg-mock-draft">
         <div className="page-header">
           <h1>Mock Draft</h1>
         </div>
@@ -131,7 +131,7 @@ export function MockDraft() {
 
   if (!draftLoaded) {
     return (
-      <div className="page">
+      <div className="page page--bg-mock-draft">
         <p>Loading player pool...</p>
       </div>
     );
@@ -139,7 +139,7 @@ export function MockDraft() {
 
   if (draftComplete) {
     return (
-      <div className="page page--wide">
+      <div className="page page--wide page--bg-mock-draft">
         <div className="page-header">
           <h1>Draft Complete</h1>
           <button type="button" onClick={restart}>
@@ -173,7 +173,7 @@ export function MockDraft() {
   const userTeamPicks = picks.filter((p) => p.teamIndex === settings.userTeamIndex);
 
   return (
-    <div className="page page--wide">
+    <div className="page page--wide page--bg-mock-draft">
       <div className="page-header">
         <h1>Mock Draft</h1>
         <button type="button" onClick={restart}>

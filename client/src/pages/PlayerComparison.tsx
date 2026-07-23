@@ -27,7 +27,7 @@ export function PlayerComparison() {
   const selectedIds = new Set(selected.map((p) => p.playerId));
 
   return (
-    <div className="page">
+    <div className="page page--bg-compare">
       <div className="page-header">
         <h1>Player Comparison</h1>
       </div>

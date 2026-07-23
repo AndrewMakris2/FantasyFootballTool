@@ -20,7 +20,7 @@ export function WaiverWire() {
   }, [data, position]);
 
   return (
-    <div className="page">
+    <div className="page page--bg-waiver">
       <div className="page-header">
         <h1>Waiver Wire</h1>
       </div>

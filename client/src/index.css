@@ -219,6 +219,8 @@ input[type="checkbox"] {
 /* ---------- Layout ---------- */
 
 .page {
+  position: relative;
+  isolation: isolate;
   max-width: 1080px;
   margin: 0 auto;
   padding: 2rem 1.5rem 3.5rem;
@@ -228,6 +230,50 @@ input[type="checkbox"] {
 
 .page--wide {
   max-width: 1360px;
+}
+
+/* Background image spots — drop files into client/public/images/backgrounds/
+   (see the README there). Purely decorative: sits behind everything, dimmed
+   under a dark gradient, never intercepts clicks. */
+.page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.page--bg-dashboard::before {
+  background-image: linear-gradient(180deg, rgba(10, 13, 18, 0.88), rgba(10, 13, 18, 0.96)),
+    url("/images/backgrounds/dashboard.jpg");
+}
+
+.page--bg-players::before {
+  background-image: linear-gradient(180deg, rgba(10, 13, 18, 0.88), rgba(10, 13, 18, 0.96)),
+    url("/images/backgrounds/players.jpg");
+}
+
+.page--bg-trade::before {
+  background-image: linear-gradient(180deg, rgba(10, 13, 18, 0.88), rgba(10, 13, 18, 0.96)),
+    url("/images/backgrounds/trade-analyzer.jpg");
+}
+
+.page--bg-compare::before {
+  background-image: linear-gradient(180deg, rgba(10, 13, 18, 0.88), rgba(10, 13, 18, 0.96)),
+    url("/images/backgrounds/compare.jpg");
+}
+
+.page--bg-waiver::before {
+  background-image: linear-gradient(180deg, rgba(10, 13, 18, 0.88), rgba(10, 13, 18, 0.96)),
+    url("/images/backgrounds/waiver-wire.jpg");
+}
+
+.page--bg-mock-draft::before {
+  background-image: linear-gradient(180deg, rgba(10, 13, 18, 0.88), rgba(10, 13, 18, 0.96)),
+    url("/images/backgrounds/mock-draft.jpg");
 }
 
 .page-header {

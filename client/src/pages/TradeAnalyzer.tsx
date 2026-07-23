@@ -85,7 +85,7 @@ export function TradeAnalyzer() {
   }
 
   return (
-    <div className="page">
+    <div className="page page--bg-trade">
       <div className="page-header">
         <h1>Trade Analyzer</h1>
       </div>

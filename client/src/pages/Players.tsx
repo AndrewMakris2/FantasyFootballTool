@@ -64,7 +64,7 @@ export function Players() {
   }, [data, search, position, team, health, rookiesOnly, rankedOnly, values]);
 
   return (
-    <div className="page">
+    <div className="page page--bg-players">
       <div className="page-header">
         <h1>Player Database</h1>
       </div>
