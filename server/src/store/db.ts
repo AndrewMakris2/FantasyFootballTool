@@ -1,5 +1,6 @@
 import { getStore, getDeployStore } from "@netlify/blobs";
 import { encrypt, decrypt } from "./crypto.js";
+import type { CustomRankingSet } from "../types/customRanking.js";
 
 export interface YahooTokens {
   accessToken: string;
@@ -65,4 +66,20 @@ export async function getLinkedYahooLeagueKeys(): Promise<string[]> {
 
 export async function setLinkedYahooLeagueKeys(keys: string[]): Promise<void> {
   await appStore().setJSON("linkedYahooLeagueKeys", keys);
+}
+
+export async function getCustomRankingSets(): Promise<Record<string, CustomRankingSet>> {
+  return (await appStore().get("customRankingSets", { type: "json" })) ?? {};
+}
+
+export async function setCustomRankingSet(set: CustomRankingSet): Promise<void> {
+  const sets = await getCustomRankingSets();
+  sets[set.name] = set;
+  await appStore().setJSON("customRankingSets", sets);
+}
+
+export async function deleteCustomRankingSet(name: string): Promise<void> {
+  const sets = await getCustomRankingSets();
+  delete sets[name];
+  await appStore().setJSON("customRankingSets", sets);
 }

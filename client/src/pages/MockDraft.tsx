@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getPlayers } from "../api/players";
 import { getTradeValues } from "../api/tradeValues";
+import { getCustomRankingSets } from "../api/customRankings";
 import { FORMAT_PARAMS } from "../lib/rankingFormats";
 import { buildPickOrder, chooseBestPick, slotForManualPick, totalRounds } from "../lib/mockDraftEngine";
 import { DraftSettingsForm } from "../components/DraftSettingsForm";
@@ -22,15 +23,24 @@ export function MockDraft() {
     enabled: settings !== null,
   });
 
-  const formatParams = settings ? FORMAT_PARAMS[settings.format] : null;
+  const valueSource = settings?.valueSource;
+  const formatParams = valueSource?.kind === "builtin" ? FORMAT_PARAMS[valueSource.format] : null;
   const { data: valuesData } = useQuery({
     queryKey: ["trade-values", formatParams?.dynasty, formatParams?.ppr],
     queryFn: () => getTradeValues(formatParams!.dynasty, formatParams!.ppr),
     enabled: settings !== null && formatParams !== null,
   });
+  const { data: customSetsData } = useQuery({
+    queryKey: ["custom-rankings"],
+    queryFn: getCustomRankingSets,
+    enabled: settings !== null && valueSource?.kind === "custom",
+  });
 
   const players = playersData?.players ?? [];
-  const values = valuesData?.values ?? {};
+  const values = useMemo(() => {
+    if (valueSource?.kind === "custom") return customSetsData?.sets[valueSource.name]?.entries ?? {};
+    return valuesData?.values ?? {};
+  }, [valueSource, customSetsData, valuesData]);
   const playersById = useMemo(() => new Map(players.map((p) => [p.playerId, p])), [players]);
 
   const rounds = settings ? totalRounds(settings.rosterSlots) : 0;
@@ -62,7 +72,14 @@ export function MockDraft() {
     if (!isBotTurn || !settings) return;
     const teamPicks = picks.filter((p) => p.teamIndex === currentPick.teamIndex);
     const timer = setTimeout(() => {
-      const result = chooseBestPick(availablePlayers, teamPicks, settings.rosterSlots, values);
+      const result = chooseBestPick(
+        availablePlayers,
+        teamPicks,
+        settings.rosterSlots,
+        values,
+        currentPick.round,
+        playersById,
+      );
       if (result) makePick(result.player.playerId);
     }, BOT_PICK_DELAY_MS);
     return () => clearTimeout(timer);
@@ -165,7 +182,14 @@ export function MockDraft() {
               <button
                 type="button"
                 onClick={() => {
-                  const result = chooseBestPick(availablePlayers, userTeamPicks, settings.rosterSlots, values);
+                  const result = chooseBestPick(
+                    availablePlayers,
+                    userTeamPicks,
+                    settings.rosterSlots,
+                    values,
+                    currentPick.round,
+                    playersById,
+                  );
                   if (result) makePick(result.player.playerId);
                 }}
               >

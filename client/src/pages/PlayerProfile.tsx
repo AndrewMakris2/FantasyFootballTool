@@ -5,6 +5,7 @@ import { getTradeValues } from "../api/tradeValues";
 import { PlayerAvatar } from "../components/PlayerAvatar";
 import { PositionBadge } from "../components/PositionBadge";
 import { FORMAT_PARAMS } from "../lib/rankingFormats";
+import { byeWeekFor } from "../lib/byeWeeks";
 
 function formatHeight(inches: number | null): string {
   if (inches === null) return "—";
@@ -104,6 +105,10 @@ export function PlayerProfile() {
         <div>
           <span className="player-profile__bio-label">Experience</span>
           <span>{player.yearsExp !== null ? `${player.yearsExp} yrs` : "—"}</span>
+        </div>
+        <div>
+          <span className="player-profile__bio-label">Bye Week</span>
+          <span>{byeWeekFor(player.team) ?? "—"}</span>
         </div>
       </div>
 

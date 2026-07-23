@@ -29,6 +29,9 @@ export function SiteHeader() {
           <NavLink to="/mock-draft" className={navLinkClass}>
             Mock Draft
           </NavLink>
+          <NavLink to="/import-rankings" className={navLinkClass}>
+            Import Rankings
+          </NavLink>
         </nav>
       </div>
     </header>

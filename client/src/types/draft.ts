@@ -1,4 +1,4 @@
-import type { RankingFormat } from "../lib/rankingFormats";
+import type { ValueSource } from "../lib/rankingFormats";
 
 export type RosterSlotKey = "QB" | "RB" | "WR" | "TE" | "FLEX" | "K" | "DEF" | "BENCH";
 
@@ -7,7 +7,7 @@ export type RosterSlots = Record<RosterSlotKey, number>;
 export interface DraftSettings {
   numTeams: number;
   userTeamIndex: number; // 0-indexed
-  format: RankingFormat;
+  valueSource: ValueSource;
   rosterSlots: RosterSlots;
 }
 

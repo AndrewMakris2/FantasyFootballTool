@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { PlayerProfile } from "../types/player";
 import type { TradeValueEntry } from "../types/tradeValue";
+import { byeWeekFor } from "../lib/byeWeeks";
 import { PlayerAvatar } from "./PlayerAvatar";
 import { PositionBadge } from "./PositionBadge";
 
@@ -60,6 +61,7 @@ export function AvailablePlayersPanel({ players, values, onDraft, canDraft }: Av
               <th>Player</th>
               <th>Pos</th>
               <th>Team</th>
+              <th>Bye</th>
               <th>Value</th>
               <th></th>
             </tr>
@@ -84,6 +86,7 @@ export function AvailablePlayersPanel({ players, values, onDraft, canDraft }: Av
                   </td>
                   <td><PositionBadge position={player.position} /></td>
                   <td>{player.team}</td>
+                  <td>{byeWeekFor(player.team) ?? "—"}</td>
                   <td>{entry ? entry.value.toLocaleString() : "Unranked"}</td>
                   <td>
                     <button type="button" disabled={!canDraft} onClick={() => onDraft(player.playerId)}>
@@ -95,7 +98,7 @@ export function AvailablePlayersPanel({ players, values, onDraft, canDraft }: Av
             })}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={6} className="empty-state">
+                <td colSpan={7} className="empty-state">
                   No players match.
                 </td>
               </tr>

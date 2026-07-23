@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { defaultRosterSlots, totalRounds } from "../lib/mockDraftEngine";
 import type { DraftSettings, RosterSlotKey } from "../types/draft";
-import type { RankingFormat } from "../lib/rankingFormats";
+import type { ValueSource } from "../lib/rankingFormats";
+import { getCustomRankingSets } from "../api/customRankings";
 
 const SLOT_LABELS: { key: RosterSlotKey; label: string }[] = [
   { key: "QB", label: "QB" },
@@ -14,11 +16,23 @@ const SLOT_LABELS: { key: RosterSlotKey; label: string }[] = [
   { key: "BENCH", label: "Bench" },
 ];
 
+function encodeValueSource(source: ValueSource): string {
+  return source.kind === "builtin" ? `builtin:${source.format}` : `custom:${source.name}`;
+}
+
+function decodeValueSource(value: string): ValueSource {
+  if (value.startsWith("custom:")) return { kind: "custom", name: value.slice("custom:".length) };
+  const format = value.slice("builtin:".length) as "standard" | "half" | "full" | "dynasty";
+  return { kind: "builtin", format };
+}
+
 export function DraftSettingsForm({ onStart }: { onStart: (settings: DraftSettings) => void }) {
   const [numTeams, setNumTeams] = useState(12);
   const [userTeamIndex, setUserTeamIndex] = useState<number | "random">(0);
-  const [format, setFormat] = useState<RankingFormat>("full");
+  const [valueSource, setValueSource] = useState<ValueSource>({ kind: "builtin", format: "full" });
   const [rosterSlots, setRosterSlots] = useState(defaultRosterSlots());
+  const { data: customSetsData } = useQuery({ queryKey: ["custom-rankings"], queryFn: getCustomRankingSets });
+  const customSets = customSetsData ? Object.values(customSetsData.sets) : [];
 
   function updateSlot(key: RosterSlotKey, value: number) {
     setRosterSlots({ ...rosterSlots, [key]: Math.max(0, value) });
@@ -26,7 +40,7 @@ export function DraftSettingsForm({ onStart }: { onStart: (settings: DraftSettin
 
   function handleStart() {
     const resolvedTeamIndex = userTeamIndex === "random" ? Math.floor(Math.random() * numTeams) : userTeamIndex;
-    onStart({ numTeams, userTeamIndex: resolvedTeamIndex, format, rosterSlots });
+    onStart({ numTeams, userTeamIndex: resolvedTeamIndex, valueSource, rosterSlots });
   }
 
   return (
@@ -60,11 +74,23 @@ export function DraftSettingsForm({ onStart }: { onStart: (settings: DraftSettin
 
         <label>
           Scoring format
-          <select value={format} onChange={(e) => setFormat(e.target.value as RankingFormat)}>
-            <option value="standard">Standard</option>
-            <option value="half">Half PPR</option>
-            <option value="full">Full PPR</option>
-            <option value="dynasty">Dynasty</option>
+          <select
+            value={encodeValueSource(valueSource)}
+            onChange={(e) => setValueSource(decodeValueSource(e.target.value))}
+          >
+            <option value="builtin:standard">Standard</option>
+            <option value="builtin:half">Half PPR</option>
+            <option value="builtin:full">Full PPR</option>
+            <option value="builtin:dynasty">Dynasty</option>
+            {customSets.length > 0 && (
+              <optgroup label="Custom">
+                {customSets.map((set) => (
+                  <option key={set.name} value={`custom:${set.name}`}>
+                    {set.name}
+                  </option>
+                ))}
+              </optgroup>
+            )}
           </select>
         </label>
       </div>
