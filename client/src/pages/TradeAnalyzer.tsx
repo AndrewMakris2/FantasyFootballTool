@@ -4,7 +4,6 @@ import { getLeagueDetail, getLeagues } from "../api/leagues";
 import { getPlayers } from "../api/players";
 import { getTradeValues } from "../api/tradeValues";
 import { TradeSide, type TradeCandidate } from "../components/TradeSide";
-import { GoalPost } from "../components/GoalPost";
 import { TradeReviewModal } from "../components/TradeReviewModal";
 import { generateDraftPickAssets } from "../lib/draftPicks";
 import type { Platform } from "../types/league";
@@ -89,7 +88,6 @@ export function TradeAnalyzer() {
     <div className="page">
       <div className="page-header">
         <h1>Trade Analyzer</h1>
-        <GoalPost className="page-header__decoration" />
       </div>
 
       <div className="filter-bar">

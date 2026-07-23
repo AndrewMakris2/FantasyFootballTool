@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import { SiteHeader } from "./components/SiteHeader";
+import { Sidebar } from "./components/Sidebar";
 import { Dashboard } from "./pages/Dashboard";
 import { Onboarding } from "./pages/Onboarding";
 import { LeagueDetail } from "./pages/LeagueDetail";
@@ -14,22 +14,24 @@ import { NotFound } from "./pages/NotFound";
 
 function App() {
   return (
-    <>
-      <SiteHeader />
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="/leagues/:platform/:leagueId" element={<LeagueDetail />} />
-        <Route path="/players" element={<Players />} />
-        <Route path="/players/:playerId" element={<PlayerProfile />} />
-        <Route path="/trade-analyzer" element={<TradeAnalyzer />} />
-        <Route path="/compare" element={<PlayerComparison />} />
-        <Route path="/waiver-wire" element={<WaiverWire />} />
-        <Route path="/mock-draft" element={<MockDraft />} />
-        <Route path="/import-rankings" element={<ImportRankings />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </>
+    <div className="app-shell">
+      <Sidebar />
+      <main className="app-shell__content">
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/leagues/:platform/:leagueId" element={<LeagueDetail />} />
+          <Route path="/players" element={<Players />} />
+          <Route path="/players/:playerId" element={<PlayerProfile />} />
+          <Route path="/trade-analyzer" element={<TradeAnalyzer />} />
+          <Route path="/compare" element={<PlayerComparison />} />
+          <Route path="/waiver-wire" element={<WaiverWire />} />
+          <Route path="/mock-draft" element={<MockDraft />} />
+          <Route path="/import-rankings" element={<ImportRankings />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
+    </div>
   );
 }
 

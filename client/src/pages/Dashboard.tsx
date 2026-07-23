@@ -8,8 +8,7 @@ import { LeagueCard } from "../components/LeagueCard";
 import { PlayerAvatar } from "../components/PlayerAvatar";
 import { PositionBadge } from "../components/PositionBadge";
 import { PlayerDetailCard } from "../components/PlayerDetailCard";
-import { FootballIcon } from "../components/FootballIcon";
-import { StadiumLights } from "../components/StadiumLights";
+import { TeamTag } from "../components/TeamTag";
 import { medalClass } from "../lib/medal";
 
 const TOP_PLAYERS_COUNT = 10;
@@ -32,55 +31,56 @@ export function Dashboard() {
     .slice(0, TOP_PLAYERS_COUNT);
 
   return (
-    <>
-      <div className="hero">
-        <div className="hero__field" />
-        <StadiumLights className="hero__lights" />
-        <FootballIcon className="hero__football hero__football--left" />
-        <FootballIcon className="hero__football hero__football--right" />
-        <div className="hero__content">
-          <h1 className="hero__title">The War Room</h1>
-          <p className="hero__subtitle">Your leagues, your players, your edge — all in one place.</p>
-          <Link to="/onboarding" className="button-link">
-            + Add leagues
-          </Link>
-        </div>
+    <div className="page page--wide">
+      <div className="page-header">
+        <h1>Dashboard</h1>
+        <Link to="/onboarding" className="button-link">
+          + Add leagues
+        </Link>
       </div>
 
-      <div className="page">
-        {topPlayers && topPlayers.length > 0 && (
-          <section>
+      <div className="dashboard-grid">
+        <section className="dashboard-widget dashboard-widget--wide">
+          <div className="dashboard-widget__header">
             <h2>Top Fantasy Players</h2>
-            <p className="data-source-note">Trade values via FantasyCalc.</p>
-            <div className="top-players-strip">
+            <span className="data-source-note">Trade values via FantasyCalc.</span>
+          </div>
+          {topPlayers && topPlayers.length > 0 ? (
+            <div className="top-players-list">
               {topPlayers.map(({ player, entry }) => (
-                <Link key={player.playerId} to={`/players/${player.playerId}`} className="top-player-card">
+                <Link key={player.playerId} to={`/players/${player.playerId}`} className="top-player-row">
+                  <span className={`top-player-row__rank ${medalClass(entry!.overallRank)}`}>
+                    #{entry!.overallRank}
+                  </span>
                   <PlayerAvatar
                     playerId={player.playerId}
                     name={player.name}
                     position={player.position}
                     team={player.team}
-                    size="md"
+                    size="sm"
                   />
-                  <span className={`top-player-card__rank ${medalClass(entry!.overallRank)}`}>
-                    #{entry!.overallRank}
-                  </span>
-                  <span className="top-player-card__name">{player.name}</span>
+                  <span className="top-player-row__name">{player.name}</span>
                   <PositionBadge position={player.position} />
+                  <TeamTag team={player.team} />
+                  <span className="top-player-row__value">{entry!.value.toLocaleString()}</span>
                 </Link>
               ))}
             </div>
-          </section>
-        )}
+          ) : (
+            <p className="empty-state">Loading rankings...</p>
+          )}
+        </section>
 
-        <section>
-          <h2>Your Watchlist</h2>
+        <section className="dashboard-widget">
+          <div className="dashboard-widget__header">
+            <h2>Your Watchlist</h2>
+          </div>
           {watchedPlayers.length === 0 ? (
             <p className="empty-state">
               Star a player anywhere on the site (Players, Waiver Wire, or their profile) to pin them here.
             </p>
           ) : (
-            <div className="watchlist-grid">
+            <div className="dashboard-widget__stack">
               {watchedPlayers.map((player) => (
                 <PlayerDetailCard
                   key={player.playerId}
@@ -92,33 +92,35 @@ export function Dashboard() {
           )}
         </section>
 
-        <div className="page-header">
-          <h2>Your Leagues</h2>
-        </div>
+        <section className="dashboard-widget">
+          <div className="dashboard-widget__header">
+            <h2>Your Leagues</h2>
+          </div>
 
-        {isLoading && <p>Loading leagues...</p>}
-        {isError && <p className="error-text">{(error as Error).message}</p>}
+          {isLoading && <p className="empty-state">Loading leagues...</p>}
+          {isError && <p className="error-text">{(error as Error).message}</p>}
 
-        {data && data.errors.length > 0 && (
-          <div className="warning-banner">
-            {data.errors.map((err, i) => (
-              <p key={i}>{err}</p>
+          {data && data.errors.length > 0 && (
+            <div className="warning-banner">
+              {data.errors.map((err, i) => (
+                <p key={i}>{err}</p>
+              ))}
+            </div>
+          )}
+
+          {data && data.leagues.length === 0 && (
+            <p className="empty-state">
+              No leagues linked yet. <Link to="/onboarding">Connect Sleeper or Yahoo</Link> to get started.
+            </p>
+          )}
+
+          <div className="league-grid">
+            {data?.leagues.map((league) => (
+              <LeagueCard key={`${league.platform}-${league.leagueId}`} league={league} />
             ))}
           </div>
-        )}
-
-        {data && data.leagues.length === 0 && (
-          <p className="empty-state">
-            No leagues linked yet. <Link to="/onboarding">Connect Sleeper or Yahoo</Link> to get started.
-          </p>
-        )}
-
-        <div className="league-grid">
-          {data?.leagues.map((league) => (
-            <LeagueCard key={`${league.platform}-${league.leagueId}`} league={league} />
-          ))}
-        </div>
+        </section>
       </div>
-    </>
+    </div>
   );
 }

@@ -5,7 +5,6 @@ import { getTradeValues } from "../api/tradeValues";
 import { ComparisonTable } from "../components/ComparisonTable";
 import { ComparisonModal } from "../components/ComparisonModal";
 import { PlayerSearchAdd } from "../components/PlayerSearchAdd";
-import { FootballIcon } from "../components/FootballIcon";
 import { FORMAT_PARAMS, type RankingFormat } from "../lib/rankingFormats";
 import type { PlayerProfile } from "../types/player";
 
@@ -31,7 +30,6 @@ export function PlayerComparison() {
     <div className="page">
       <div className="page-header">
         <h1>Player Comparison</h1>
-        <FootballIcon className="page-header__decoration" />
       </div>
 
       <div className="filter-bar">

@@ -76,54 +76,56 @@ export function PlayerProfile() {
         &larr; Back to players
       </button>
 
-      <div className="player-profile__header">
-        <PlayerAvatar
-          playerId={player.playerId}
-          name={player.name}
-          position={player.position}
-          team={player.team}
-          size="lg"
-          ringColor={teamColor(player.team)}
-        />
-        <div>
-          <h1>
-            {player.name}
-            {player.jerseyNumber !== null && (
-              <span className="player-profile__number">No. {player.jerseyNumber}</span>
-            )}
-            <WatchlistButton playerId={player.playerId} />
-          </h1>
-          <div className="player-profile__meta">
-            <PositionBadge position={player.position} />
-            <TeamTag team={player.team} />
-            {player.injuryStatus && <span className="injury-badge">{player.injuryStatus}</span>}
+      <div className="player-profile__banner">
+        <div className="player-profile__identity">
+          <PlayerAvatar
+            playerId={player.playerId}
+            name={player.name}
+            position={player.position}
+            team={player.team}
+            size="md"
+            ringColor={teamColor(player.team)}
+          />
+          <div>
+            <h1>
+              {player.name}
+              {player.jerseyNumber !== null && (
+                <span className="player-profile__number">No. {player.jerseyNumber}</span>
+              )}
+              <WatchlistButton playerId={player.playerId} />
+            </h1>
+            <div className="player-profile__meta">
+              <PositionBadge position={player.position} />
+              <TeamTag team={player.team} />
+              {player.injuryStatus && <span className="injury-badge">{player.injuryStatus}</span>}
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="player-profile__bio-grid">
-        <div>
-          <span className="player-profile__bio-label">Age</span>
-          <span>{player.age ?? "—"}</span>
-        </div>
-        <div>
-          <span className="player-profile__bio-label">Height/Weight</span>
-          <span>
-            {formatHeight(player.heightInches)}
-            {player.weightLbs !== null ? ` / ${player.weightLbs} lb` : ""}
-          </span>
-        </div>
-        <div>
-          <span className="player-profile__bio-label">College</span>
-          <span>{player.college ?? "—"}</span>
-        </div>
-        <div>
-          <span className="player-profile__bio-label">Experience</span>
-          <span>{player.yearsExp !== null ? `${player.yearsExp} yrs` : "—"}</span>
-        </div>
-        <div>
-          <span className="player-profile__bio-label">Bye Week</span>
-          <span>{byeWeekFor(player.team) ?? "—"}</span>
+        <div className="player-profile__stats">
+          <div>
+            <span className="player-profile__bio-label">Age</span>
+            <span>{player.age ?? "—"}</span>
+          </div>
+          <div>
+            <span className="player-profile__bio-label">Ht/Wt</span>
+            <span>
+              {formatHeight(player.heightInches)}
+              {player.weightLbs !== null ? ` / ${player.weightLbs} lb` : ""}
+            </span>
+          </div>
+          <div>
+            <span className="player-profile__bio-label">College</span>
+            <span>{player.college ?? "—"}</span>
+          </div>
+          <div>
+            <span className="player-profile__bio-label">Exp</span>
+            <span>{player.yearsExp !== null ? `${player.yearsExp} yrs` : "—"}</span>
+          </div>
+          <div>
+            <span className="player-profile__bio-label">Bye</span>
+            <span>{byeWeekFor(player.team) ?? "—"}</span>
+          </div>
         </div>
       </div>
 

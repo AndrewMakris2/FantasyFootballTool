@@ -231,31 +231,18 @@ input[type="checkbox"] {
 }
 
 .page-header {
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
   gap: 1rem;
   flex-wrap: wrap;
 }
 
-.page-header h1,
-.page-header > button,
-.page-header > a {
-  position: relative;
-  z-index: 1;
-}
-
-.page-header__decoration {
-  position: absolute;
-  top: 50%;
-  right: -0.5rem;
-  width: 90px;
-  transform: translateY(-50%) rotate(-10deg);
-  opacity: 0.1;
-  pointer-events: none;
-  z-index: 0;
+.page-header h1 {
+  font-size: 1.5rem;
 }
 
 section {
@@ -345,151 +332,147 @@ section {
   box-shadow: none;
 }
 
-/* ---------- Site header ---------- */
+/* ---------- App shell (sidebar layout) ---------- */
 
-.site-header {
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+  align-items: stretch;
+}
+
+.app-shell__content {
+  flex: 1;
+  min-width: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
   background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  padding: 1.25rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
   position: sticky;
   top: 0;
-  z-index: 50;
+  height: 100vh;
+  overflow-y: auto;
 }
 
-.site-header__inner {
-  max-width: 1360px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 62px;
-  gap: 1.5rem;
-}
-
-.site-header__brand {
+.sidebar__brand {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   text-decoration: none;
   font-weight: 800;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   color: var(--text);
-  flex-shrink: 0;
+  padding: 0 0.4rem;
 }
 
-.site-header__mark {
+.sidebar__mark {
   color: var(--accent);
 }
 
-.site-header__nav {
+.sidebar__nav {
   display: flex;
-  gap: 1.4rem;
-  overflow-x: auto;
+  flex-direction: column;
+  gap: 0.15rem;
 }
 
-.site-header__nav a {
+.sidebar__nav a {
   color: var(--muted);
   text-decoration: none;
   font-weight: 700;
   font-size: 0.86rem;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  white-space: nowrap;
-  padding: 0.4rem 0;
-  border-bottom: 2px solid transparent;
-  transition: color 0.15s ease, border-color 0.15s ease;
+  padding: 0.6rem 0.7rem;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid transparent;
+  transition: color 0.12s ease, background-color 0.12s ease, border-color 0.12s ease;
 }
 
-.site-header__nav a:hover {
+.sidebar__nav a:hover {
   color: var(--text);
+  background: var(--surface-2);
 }
 
-.site-header__nav a.active {
+.sidebar__nav a.active {
   color: var(--text);
-  border-bottom-color: var(--accent);
+  background: var(--accent-soft);
+  border-left-color: var(--accent);
 }
 
-/* ---------- Hero ---------- */
-
-.hero {
-  position: relative;
-  text-align: center;
-  padding: 3.25rem 1.5rem 3rem;
-  margin-bottom: 0.5rem;
-  overflow: hidden;
-  border-bottom: 1px solid var(--border);
-  background: linear-gradient(180deg, #111825 0%, var(--bg) 100%);
-}
-
-.hero__field {
-  position: absolute;
-  inset: 0;
-  background-image: repeating-linear-gradient(
-    100deg,
-    rgba(255, 255, 255, 0.03) 0px,
-    rgba(255, 255, 255, 0.03) 2px,
-    transparent 2px,
-    transparent 64px
-  );
-  mask-image: radial-gradient(ellipse at 50% 30%, black 0%, transparent 75%);
-}
-
-.hero__lights {
-  position: absolute;
-  top: 6%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 170px;
-  opacity: 0.1;
-}
-
-.hero__football {
-  position: absolute;
-  width: 150px;
-  opacity: 0.1;
-  animation: hero-football-float 8s ease-in-out infinite;
-}
-
-.hero__football--left {
-  top: 12%;
-  left: -2%;
-  transform: rotate(-18deg);
-}
-
-.hero__football--right {
-  bottom: 8%;
-  right: -2%;
-  transform: rotate(24deg);
-  animation-delay: -4s;
-}
-
-@keyframes hero-football-float {
-  0%,
-  100% {
-    transform: translateY(0) rotate(-18deg);
+@media (max-width: 820px) {
+  .app-shell {
+    flex-direction: column;
   }
-  50% {
-    transform: translateY(-10px) rotate(-18deg);
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+    flex-direction: row;
+    align-items: center;
+    overflow-x: auto;
+  }
+
+  .sidebar__nav {
+    flex-direction: row;
+  }
+
+  .sidebar__nav a {
+    white-space: nowrap;
+    border-left: none;
+    border-bottom: 3px solid transparent;
+  }
+
+  .sidebar__nav a.active {
+    border-left-color: transparent;
+    border-bottom-color: var(--accent);
   }
 }
 
-.hero__content {
-  position: relative;
-  z-index: 1;
+/* ---------- Dashboard widget grid ---------- */
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 1.25rem;
+  align-items: start;
 }
 
-.hero__title {
-  font-size: 2.6rem;
-  background: var(--accent-gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+.dashboard-widget {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
 }
 
-.hero__subtitle {
-  color: var(--text-secondary);
-  font-size: 1.05rem;
-  margin: 0 0 1.4rem;
+.dashboard-widget--wide {
+  grid-column: 1 / -1;
+}
+
+.dashboard-widget__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.dashboard-widget__header h2 {
+  margin: 0;
+}
+
+.dashboard-widget__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
 }
 
 /* ---------- Tables ---------- */
@@ -789,98 +772,122 @@ h1 .watchlist-button {
   margin-left: 0.4rem;
 }
 
-.watchlist-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
-  gap: 1rem;
-}
 
-/* ---------- Top players strip (Dashboard) ---------- */
+/* ---------- Top players list (Dashboard) ---------- */
 
-.top-players-strip {
-  display: flex;
-  gap: 0.85rem;
-  overflow-x: auto;
-  padding: 0.25rem 0.25rem 1rem;
-}
-
-.top-player-card {
+.top-players-list {
   display: flex;
   flex-direction: column;
+  gap: 0.4rem;
+}
+
+.top-player-row {
+  display: flex;
   align-items: center;
-  gap: 0.35rem;
-  min-width: 115px;
-  background: var(--surface);
+  gap: 0.75rem;
+  background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 0.9rem 0.65rem;
+  padding: 0.5rem 0.75rem;
   text-decoration: none;
   color: var(--text);
-  text-align: center;
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.12s ease, border-color 0.12s ease;
+  transition: border-color 0.12s ease, background-color 0.12s ease;
 }
 
-.top-player-card:hover {
-  transform: translateY(-3px);
+.top-player-row:hover {
   border-color: var(--accent);
+  background: var(--surface-3);
 }
 
-.top-player-card__rank {
+.top-player-row__rank {
   color: var(--accent);
   font-weight: 800;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  width: 2rem;
+  flex-shrink: 0;
 }
 
-.top-player-card__name {
+.top-player-row__name {
   font-weight: 700;
-  font-size: 0.87rem;
-  line-height: 1.2;
+  font-size: 0.9rem;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.top-player-row__value {
+  color: var(--text-secondary);
+  font-weight: 700;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  margin-left: auto;
 }
 
 /* ---------- League cards / matchup ---------- */
 
 .league-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-  gap: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
 }
 
 .league-card {
-  display: block;
-  background: var(--surface);
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  background: var(--surface-2);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 1.1rem;
+  border-radius: var(--radius-md);
+  padding: 0.75rem 0.9rem;
   text-decoration: none;
   color: var(--text);
-  box-shadow: var(--shadow-sm);
-  transition: border-color 0.12s ease, transform 0.12s ease;
+  transition: border-color 0.12s ease, background-color 0.12s ease;
 }
 
 .league-card:hover {
   border-color: var(--accent);
-  transform: translateY(-2px);
+  background: var(--surface-3);
 }
 
-.league-card__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-  font-weight: 700;
+.league-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.league-card__body h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .league-card__team {
   color: var(--text-secondary);
-  margin: 0 0 0.25rem;
+  margin: 0.1rem 0 0;
+  font-size: 0.82rem;
 }
 
 .league-card__record {
   color: var(--muted);
   font-size: 0.85rem;
+  font-weight: 700;
   margin: 0;
+  text-align: right;
+  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+}
+
+.league-card__season {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 500;
 }
 
 .matchup-card {
@@ -932,21 +939,33 @@ h1 .watchlist-button {
 
 /* ---------- Player profile ---------- */
 
-.player-profile__header {
+.player-profile__banner {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
   gap: 1.5rem;
-  margin-bottom: 2rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.75rem;
 }
 
-.player-profile__header h1 {
-  font-size: 2rem;
-  margin-bottom: 0.4rem;
+.player-profile__identity {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+}
+
+.player-profile__identity h1 {
+  font-size: 1.55rem;
+  margin-bottom: 0.35rem;
 }
 
 .player-profile__number {
   color: var(--muted);
-  font-size: 1rem;
+  font-size: 0.9rem;
   margin-left: 0.5rem;
   font-weight: 500;
 }
@@ -959,18 +978,13 @@ h1 .watchlist-button {
   font-weight: 600;
 }
 
-.player-profile__bio-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 1rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 1.1rem;
-  margin-bottom: 1.75rem;
+.player-profile__stats {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
 }
 
-.player-profile__bio-grid > div {
+.player-profile__stats > div {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -978,16 +992,17 @@ h1 .watchlist-button {
 
 .player-profile__bio-label {
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   font-weight: 700;
 }
 
-.player-profile__bio-grid span:last-child {
-  font-size: 1.02rem;
+.player-profile__stats span:last-child {
+  font-size: 0.95rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .ranking-cards {

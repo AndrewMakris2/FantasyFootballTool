@@ -5,7 +5,6 @@ import { getPlayers } from "../api/players";
 import { getTradeValues } from "../api/tradeValues";
 import { PlayersTable } from "../components/PlayersTable";
 import { FORMAT_PARAMS, type RankingFormat } from "../lib/rankingFormats";
-import { FootballIcon } from "../components/FootballIcon";
 
 const POSITIONS = ["QB", "RB", "WR", "TE", "K", "DEF"];
 
@@ -68,7 +67,6 @@ export function Players() {
     <div className="page">
       <div className="page-header">
         <h1>Player Database</h1>
-        <FootballIcon className="page-header__decoration" />
       </div>
       <p className="data-source-note">Live player data via Sleeper &middot; trade values via FantasyCalc.</p>
 
