@@ -16,9 +16,9 @@ export function FootballIcon({ className }: { className?: string }) {
       </g>
       <defs>
         <linearGradient id="footballGradient" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#9179fb" />
-          <stop offset="55%" stopColor="#5b9bff" />
-          <stop offset="100%" stopColor="#2ee2f5" />
+          <stop offset="0%" stopColor="#2f7dff" />
+          <stop offset="55%" stopColor="#1f9de0" />
+          <stop offset="100%" stopColor="#17d9c4" />
         </linearGradient>
       </defs>
     </svg>

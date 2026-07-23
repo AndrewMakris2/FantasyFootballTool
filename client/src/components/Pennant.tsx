@@ -5,8 +5,8 @@ export function Pennant({ className }: { className?: string }) {
       <path d="M20 18 L128 42 L20 66 Z" fill="url(#pennantGradient)" opacity="0.9" />
       <defs>
         <linearGradient id="pennantGradient" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#9179fb" />
-          <stop offset="100%" stopColor="#2ee2f5" />
+          <stop offset="0%" stopColor="#2f7dff" />
+          <stop offset="100%" stopColor="#17d9c4" />
         </linearGradient>
       </defs>
     </svg>
