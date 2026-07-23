@@ -58,7 +58,7 @@ export function Onboarding() {
     <div className="page">
       <h1>Connect your leagues</h1>
 
-      <section className="onboarding-section">
+      <section className="onboarding-section onboarding-section--sleeper">
         <h2>Sleeper</h2>
         <form
           onSubmit={(e) => {
@@ -96,7 +96,7 @@ export function Onboarding() {
         )}
       </section>
 
-      <section className="onboarding-section">
+      <section className="onboarding-section onboarding-section--yahoo">
         <h2>Yahoo</h2>
         {!yahooStatus.data?.connected && (
           <a className="button-link" href="/api/yahoo/auth/start">

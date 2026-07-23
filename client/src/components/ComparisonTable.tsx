@@ -4,6 +4,8 @@ import type { PlayerProfile } from "../types/player";
 import type { TradeValueEntry } from "../types/tradeValue";
 import { PositionBadge } from "./PositionBadge";
 import { PlayerAvatar } from "./PlayerAvatar";
+import { TeamTag } from "./TeamTag";
+import { medalClass } from "../lib/medal";
 
 function formatHeight(inches: number | null): string {
   if (inches === null) return "—";
@@ -23,11 +25,31 @@ export function ComparisonTable({ players, values, onRemove }: ComparisonTablePr
     return <p className="empty-state">Add at least two players to compare them.</p>;
   }
 
+  const maxValue = Math.max(...players.map((p) => values[p.playerId]?.value ?? -Infinity));
+
   const rows: [string, (p: PlayerProfile) => ReactNode][] = [
-    ["Rank", (p) => (values[p.playerId] ? `#${values[p.playerId].overallRank}` : "—")],
-    ["Value", (p) => (values[p.playerId] ? values[p.playerId].value.toLocaleString() : "Unranked")],
+    [
+      "Rank",
+      (p) =>
+        values[p.playerId] ? (
+          <span className={medalClass(values[p.playerId].overallRank)}>#{values[p.playerId].overallRank}</span>
+        ) : (
+          "—"
+        ),
+    ],
+    [
+      "Value",
+      (p) => {
+        const entry = values[p.playerId];
+        if (!entry) return "Unranked";
+        const isWinner = players.length > 1 && entry.value === maxValue;
+        return (
+          <span className={isWinner ? "comparison-table__winner" : undefined}>{entry.value.toLocaleString()}</span>
+        );
+      },
+    ],
     ["Position", (p) => <PositionBadge position={p.position} />],
-    ["Team", (p) => p.team],
+    ["Team", (p) => <TeamTag team={p.team} />],
     ["Age", (p) => p.age ?? "—"],
     ["Height/Weight", (p) => `${formatHeight(p.heightInches)}${p.weightLbs !== null ? ` / ${p.weightLbs} lb` : ""}`],
     ["College", (p) => p.college ?? "—"],

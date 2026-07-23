@@ -2,8 +2,10 @@ import { useMemo, useState } from "react";
 import type { PlayerProfile } from "../types/player";
 import type { TradeValueEntry } from "../types/tradeValue";
 import { byeWeekFor } from "../lib/byeWeeks";
+import { medalClass } from "../lib/medal";
 import { PlayerAvatar } from "./PlayerAvatar";
 import { PositionBadge } from "./PositionBadge";
+import { TeamTag } from "./TeamTag";
 
 const POSITIONS = ["ALL", "QB", "RB", "WR", "TE", "K", "DEF"];
 
@@ -71,7 +73,7 @@ export function AvailablePlayersPanel({ players, values, onDraft, canDraft }: Av
               const entry = values[player.playerId];
               return (
                 <tr key={player.playerId}>
-                  <td>{entry ? `#${entry.overallRank}` : "—"}</td>
+                  <td>{entry ? <span className={medalClass(entry.overallRank)}>#{entry.overallRank}</span> : "—"}</td>
                   <td>
                     <span className="table-player-link">
                       <PlayerAvatar
@@ -85,7 +87,7 @@ export function AvailablePlayersPanel({ players, values, onDraft, canDraft }: Av
                     </span>
                   </td>
                   <td><PositionBadge position={player.position} /></td>
-                  <td>{player.team}</td>
+                  <td><TeamTag team={player.team} /></td>
                   <td>{byeWeekFor(player.team) ?? "—"}</td>
                   <td>{entry ? entry.value.toLocaleString() : "Unranked"}</td>
                   <td>

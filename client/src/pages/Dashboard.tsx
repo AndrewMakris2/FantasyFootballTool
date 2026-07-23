@@ -7,6 +7,7 @@ import { LeagueCard } from "../components/LeagueCard";
 import { PlayerAvatar } from "../components/PlayerAvatar";
 import { PositionBadge } from "../components/PositionBadge";
 import { FootballIcon } from "../components/FootballIcon";
+import { medalClass } from "../lib/medal";
 
 const TOP_PLAYERS_COUNT = 10;
 
@@ -53,7 +54,9 @@ export function Dashboard() {
                     team={player.team}
                     size="md"
                   />
-                  <span className="top-player-card__rank">#{entry!.overallRank}</span>
+                  <span className={`top-player-card__rank ${medalClass(entry!.overallRank)}`}>
+                    #{entry!.overallRank}
+                  </span>
                   <span className="top-player-card__name">{player.name}</span>
                   <PositionBadge position={player.position} />
                 </Link>

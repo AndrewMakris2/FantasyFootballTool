@@ -187,9 +187,18 @@ section {
 .onboarding-section {
   background: var(--surface);
   border: 1px solid var(--border);
+  border-left: 3px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
   box-shadow: var(--shadow-sm);
+}
+
+.onboarding-section--sleeper {
+  border-left-color: var(--sleeper);
+}
+
+.onboarding-section--yahoo {
+  border-left-color: var(--yahoo);
 }
 
 /* League cards */
@@ -294,6 +303,43 @@ section {
 
 .position-badge--DEF {
   background: var(--pos-def);
+}
+
+/* Team tag */
+
+.team-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-weight: 600;
+}
+
+.team-tag__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+/* Rank medals */
+
+.rank-medal {
+  font-weight: 800;
+}
+
+span.rank-medal--gold {
+  color: #ffd700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.45);
+}
+
+span.rank-medal--silver {
+  color: #dfe4ea;
+  text-shadow: 0 0 10px rgba(223, 228, 234, 0.35);
+}
+
+span.rank-medal--bronze {
+  color: #e8a26a;
+  text-shadow: 0 0 10px rgba(232, 162, 106, 0.35);
 }
 
 .position-badge--UNK {
@@ -476,14 +522,35 @@ select:focus {
 
 .trade-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
   gap: 1rem;
   margin-bottom: 1rem;
+}
+
+.trade-vs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  background: var(--accent-gradient);
+  color: white;
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+  box-shadow: var(--shadow-glow);
+  justify-self: center;
 }
 
 @media (max-width: 700px) {
   .trade-grid {
     grid-template-columns: 1fr;
+  }
+
+  .trade-vs {
+    margin: -0.25rem auto;
   }
 }
 
@@ -653,6 +720,11 @@ select:focus {
 
 .comparison-table__player a:hover {
   color: var(--accent-2);
+}
+
+.comparison-table__winner {
+  color: var(--success);
+  font-weight: 800;
 }
 
 /* Avatars */
@@ -1286,6 +1358,13 @@ select:focus {
   max-height: 520px;
   overflow-y: auto;
   border-radius: var(--radius-lg);
+}
+
+.available-players__scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface-2);
 }
 
 .available-players button {

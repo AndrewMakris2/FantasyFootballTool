@@ -139,6 +139,7 @@ export function TradeAnalyzer() {
               : setFreeformA(freeformA.filter((p) => p.playerId !== id))
           }
         />
+        <div className="trade-vs">VS</div>
         <TradeSide
           label="Side B gives"
           candidates={mode === "league" ? teamB?.roster ?? [] : candidates}

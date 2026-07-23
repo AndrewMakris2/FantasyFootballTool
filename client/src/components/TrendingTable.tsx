@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import type { TrendingPlayer } from "../api/trendingPlayers";
 import { PositionBadge } from "./PositionBadge";
 import { PlayerAvatar } from "./PlayerAvatar";
+import { TeamTag } from "./TeamTag";
 
 export function TrendingTable({ players }: { players: TrendingPlayer[] }) {
   if (players.length === 0) {
@@ -37,7 +38,7 @@ export function TrendingTable({ players }: { players: TrendingPlayer[] }) {
               </Link>
             </td>
             <td><PositionBadge position={player.position} /></td>
-            <td>{player.team}</td>
+            <td><TeamTag team={player.team} /></td>
             <td className="trending-count">{player.trendCount.toLocaleString()}</td>
             <td>
               {player.injuryStatus ? <span className="injury-badge">{player.injuryStatus}</span> : "Healthy"}

@@ -3,6 +3,8 @@ import type { PlayerProfile } from "../types/player";
 import type { TradeValueEntry } from "../types/tradeValue";
 import { PositionBadge } from "./PositionBadge";
 import { PlayerAvatar } from "./PlayerAvatar";
+import { TeamTag } from "./TeamTag";
+import { medalClass } from "../lib/medal";
 
 function formatHeight(inches: number | null): string {
   if (inches === null) return "—";
@@ -59,10 +61,12 @@ export function PlayersTable({ players, values }: PlayersTableProps) {
                   </span>
                 </Link>
               </td>
-              <td>{entry ? `#${entry.overallRank}` : "—"}</td>
+              <td>
+                {entry ? <span className={medalClass(entry.overallRank)}>#{entry.overallRank}</span> : "—"}
+              </td>
               <td>{entry ? entry.value.toLocaleString() : "Unranked"}</td>
               <td><PositionBadge position={player.position} /></td>
-              <td>{player.team}</td>
+              <td><TeamTag team={player.team} /></td>
               <td>{player.age ?? "—"}</td>
               <td>
                 {formatHeight(player.heightInches)}

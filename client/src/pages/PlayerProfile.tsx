@@ -6,6 +6,9 @@ import { PlayerAvatar } from "../components/PlayerAvatar";
 import { PositionBadge } from "../components/PositionBadge";
 import { FORMAT_PARAMS } from "../lib/rankingFormats";
 import { byeWeekFor } from "../lib/byeWeeks";
+import { medalClass } from "../lib/medal";
+import { teamColor } from "../lib/teamColors";
+import { TeamTag } from "../components/TeamTag";
 
 function formatHeight(inches: number | null): string {
   if (inches === null) return "—";
@@ -72,7 +75,14 @@ export function PlayerProfile() {
       </Link>
 
       <div className="player-profile__header">
-        <PlayerAvatar playerId={player.playerId} name={player.name} position={player.position} team={player.team} size="lg" />
+        <PlayerAvatar
+          playerId={player.playerId}
+          name={player.name}
+          position={player.position}
+          team={player.team}
+          size="lg"
+          ringColor={teamColor(player.team)}
+        />
         <div>
           <h1>
             {player.name}
@@ -80,7 +90,7 @@ export function PlayerProfile() {
           </h1>
           <div className="player-profile__meta">
             <PositionBadge position={player.position} />
-            <span>{player.team}</span>
+            <TeamTag team={player.team} />
             {player.injuryStatus && <span className="injury-badge">{player.injuryStatus}</span>}
           </div>
         </div>
@@ -121,7 +131,7 @@ export function PlayerProfile() {
               <span className="ranking-card__label">{label}</span>
               {entry ? (
                 <>
-                  <span className="ranking-card__rank">#{entry.overallRank}</span>
+                  <span className={`ranking-card__rank ${medalClass(entry.overallRank)}`}>#{entry.overallRank}</span>
                   <span className="ranking-card__value">{entry.value.toLocaleString()}</span>
                 </>
               ) : (
