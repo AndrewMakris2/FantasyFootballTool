@@ -219,8 +219,6 @@ input[type="checkbox"] {
 /* ---------- Layout ---------- */
 
 .page {
-  position: relative;
-  isolation: isolate;
   max-width: 1080px;
   margin: 0 auto;
   padding: 2rem 1.5rem 3.5rem;
@@ -234,8 +232,15 @@ input[type="checkbox"] {
 
 /* Background image spots — drop files into client/public/images/backgrounds/
    (see the README there). Purely decorative: sits behind everything, dimmed
-   under a dark gradient, never intercepts clicks. */
-.page::before {
+   under a dark gradient, never intercepts clicks. Positioned relative to
+   .app-shell__content (not .page) so it stretches to the full content
+   area edge-to-edge instead of being boxed in by .page's centered max-width. */
+.app-shell__content {
+  position: relative;
+  isolation: isolate;
+}
+
+.app-shell__content::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -246,32 +251,32 @@ input[type="checkbox"] {
   pointer-events: none;
 }
 
-.page--bg-dashboard::before {
+.app-shell__content:has(> .page--bg-dashboard)::before {
   background-image: linear-gradient(180deg, rgba(10, 13, 18, 0.45), rgba(10, 13, 18, 0.7)),
     url("/images/backgrounds/dashboard.svg");
 }
 
-.page--bg-players::before {
+.app-shell__content:has(> .page--bg-players)::before {
   background-image: linear-gradient(180deg, rgba(10, 13, 18, 0.45), rgba(10, 13, 18, 0.7)),
     url("/images/backgrounds/players.svg");
 }
 
-.page--bg-trade::before {
+.app-shell__content:has(> .page--bg-trade)::before {
   background-image: linear-gradient(180deg, rgba(10, 13, 18, 0.45), rgba(10, 13, 18, 0.7)),
     url("/images/backgrounds/trade-analyzer.svg");
 }
 
-.page--bg-compare::before {
+.app-shell__content:has(> .page--bg-compare)::before {
   background-image: linear-gradient(180deg, rgba(10, 13, 18, 0.45), rgba(10, 13, 18, 0.7)),
     url("/images/backgrounds/compare.svg");
 }
 
-.page--bg-waiver::before {
+.app-shell__content:has(> .page--bg-waiver)::before {
   background-image: linear-gradient(180deg, rgba(10, 13, 18, 0.45), rgba(10, 13, 18, 0.7)),
     url("/images/backgrounds/waiver-wire.svg");
 }
 
-.page--bg-mock-draft::before {
+.app-shell__content:has(> .page--bg-mock-draft)::before {
   background-image: linear-gradient(180deg, rgba(10, 13, 18, 0.45), rgba(10, 13, 18, 0.7)),
     url("/images/backgrounds/mock-draft.svg");
 }
