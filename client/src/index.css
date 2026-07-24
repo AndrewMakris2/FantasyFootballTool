@@ -253,32 +253,32 @@ input[type="checkbox"] {
 
 .app-shell__content:has(> .page--bg-dashboard)::before {
   background-image: linear-gradient(180deg, rgba(10, 13, 18, 0.45), rgba(10, 13, 18, 0.7)),
-    url("/images/backgrounds/dashboard.svg");
+    url("/images/backgrounds/dashboard.jpeg");
 }
 
 .app-shell__content:has(> .page--bg-players)::before {
   background-image: linear-gradient(180deg, rgba(10, 13, 18, 0.45), rgba(10, 13, 18, 0.7)),
-    url("/images/backgrounds/players.svg");
+    url("/images/backgrounds/players.jpeg");
 }
 
 .app-shell__content:has(> .page--bg-trade)::before {
   background-image: linear-gradient(180deg, rgba(10, 13, 18, 0.45), rgba(10, 13, 18, 0.7)),
-    url("/images/backgrounds/trade-analyzer.svg");
+    url("/images/backgrounds/trade-analyzer.webp");
 }
 
 .app-shell__content:has(> .page--bg-compare)::before {
   background-image: linear-gradient(180deg, rgba(10, 13, 18, 0.45), rgba(10, 13, 18, 0.7)),
-    url("/images/backgrounds/compare.svg");
+    url("/images/backgrounds/compare.jpg");
 }
 
 .app-shell__content:has(> .page--bg-waiver)::before {
   background-image: linear-gradient(180deg, rgba(10, 13, 18, 0.45), rgba(10, 13, 18, 0.7)),
-    url("/images/backgrounds/waiver-wire.svg");
+    url("/images/backgrounds/waiver-wire.jpg");
 }
 
 .app-shell__content:has(> .page--bg-mock-draft)::before {
   background-image: linear-gradient(180deg, rgba(10, 13, 18, 0.45), rgba(10, 13, 18, 0.7)),
-    url("/images/backgrounds/mock-draft.svg");
+    url("/images/backgrounds/mock-draft.jpg");
 }
 
 .page-header {
