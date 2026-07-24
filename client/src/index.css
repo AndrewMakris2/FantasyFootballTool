@@ -78,7 +78,7 @@ body {
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   font-size: 15px;
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
@@ -614,15 +614,15 @@ section {
   position: sticky;
   left: 0;
   z-index: 1;
-  background: var(--surface-2);
+  background: rgba(26, 32, 41, 0.75);
 }
 
 .data-table-scroll--frozen-first .data-table tbody td:first-child {
-  background: var(--surface);
+  background: rgba(19, 24, 32, 0.75);
 }
 
 .data-table-scroll--frozen-first .data-table tbody tr:nth-child(even) td:first-child {
-  background: #171d26;
+  background: rgba(23, 29, 38, 0.75);
 }
 
 .table-player-cell {

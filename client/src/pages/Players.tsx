@@ -7,7 +7,7 @@ import { PlayersTable } from "../components/PlayersTable";
 import { FORMAT_PARAMS, type RankingFormat } from "../lib/rankingFormats";
 
 const POSITIONS = ["QB", "RB", "WR", "TE", "K", "DEF"];
-const PAGE_SIZE = 40;
+const PAGE_SIZE = 15;
 
 export function Players() {
   const { data, isLoading, isError, error } = useQuery({ queryKey: ["players"], queryFn: getPlayers });
