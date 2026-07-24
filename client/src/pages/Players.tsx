@@ -7,6 +7,7 @@ import { PlayersTable } from "../components/PlayersTable";
 import { FORMAT_PARAMS, type RankingFormat } from "../lib/rankingFormats";
 
 const POSITIONS = ["QB", "RB", "WR", "TE", "K", "DEF"];
+const PAGE_SIZE = 40;
 
 export function Players() {
   const { data, isLoading, isError, error } = useQuery({ queryKey: ["players"], queryFn: getPlayers });
@@ -21,11 +22,20 @@ export function Players() {
   const health = searchParams.get("health") ?? "ALL";
   const rookiesOnly = searchParams.get("rookies") === "1";
   const rankedOnly = searchParams.get("ranked") === "1";
+  const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1);
 
   function setParam(key: string, value: string | null) {
     const next = new URLSearchParams(searchParams);
     if (value === null || value === "") next.delete(key);
     else next.set(key, value);
+    next.delete("page");
+    setSearchParams(next, { replace: true });
+  }
+
+  function setPage(nextPage: number) {
+    const next = new URLSearchParams(searchParams);
+    if (nextPage <= 1) next.delete("page");
+    else next.set("page", String(nextPage));
     setSearchParams(next, { replace: true });
   }
 
@@ -62,6 +72,15 @@ export function Players() {
         return a.name.localeCompare(b.name);
       });
   }, [data, search, position, team, health, rookiesOnly, rankedOnly, values]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const paged = useMemo(
+    () => filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
+    [filtered, currentPage],
+  );
+  const rangeStart = filtered.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const rangeEnd = Math.min(currentPage * PAGE_SIZE, filtered.length);
 
   return (
     <div className="page page--bg-players">
@@ -131,9 +150,22 @@ export function Players() {
       {data && (
         <>
           <p className="empty-state">
-            {filtered.length} of {data.players.length} players
+            Showing {rangeStart}&ndash;{rangeEnd} of {filtered.length} players
           </p>
-          <PlayersTable players={filtered} values={values} />
+          <PlayersTable players={paged} values={values} />
+          {totalPages > 1 && (
+            <div className="pagination">
+              <button type="button" onClick={() => setPage(currentPage - 1)} disabled={currentPage <= 1}>
+                &lsaquo; Prev
+              </button>
+              <span className="pagination__status">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button type="button" onClick={() => setPage(currentPage + 1)} disabled={currentPage >= totalPages}>
+                Next &rsaquo;
+              </button>
+            </div>
+          )}
         </>
       )}
     </div>
