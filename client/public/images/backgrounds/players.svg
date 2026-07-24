@@ -1,0 +1,45 @@
+<svg viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0a0d12" stop-opacity="1"/>
+      <stop offset="35%" stop-color="#0a0d12" stop-opacity="0.55"/>
+      <stop offset="70%" stop-color="#0a0d12" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#0a0d12" stop-opacity="1"/>
+    </linearGradient>
+    <radialGradient id="vignette" cx="50%" cy="45%" r="75%">
+      <stop offset="0%" stop-color="#0a0d12" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#0a0d12" stop-opacity="0.6"/>
+    </radialGradient>
+    <radialGradient id="spot" cx="50%" cy="45%" r="60%">
+      <stop offset="0%" stop-color="#2f7dff" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#2f7dff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="900" fill="#0a0d12"/>
+  <rect width="1600" height="900" fill="url(#spot)"/>
+
+  <g stroke="#2f7dff" stroke-opacity="0.5" stroke-width="2">
+    <line x1="0" y1="60" x2="1600" y2="60"/>
+    <line x1="0" y1="150" x2="1600" y2="150"/>
+    <line x1="0" y1="240" x2="1600" y2="240"/>
+    <line x1="0" y1="330" x2="1600" y2="330"/>
+    <line x1="0" y1="420" x2="1600" y2="420"/>
+    <line x1="0" y1="510" x2="1600" y2="510"/>
+    <line x1="0" y1="600" x2="1600" y2="600"/>
+    <line x1="0" y1="690" x2="1600" y2="690"/>
+    <line x1="0" y1="780" x2="1600" y2="780"/>
+    <line x1="0" y1="870" x2="1600" y2="870"/>
+  </g>
+  <g stroke="#17d9c4" stroke-opacity="0.35" stroke-width="1">
+    <line x1="100" y1="0" x2="100" y2="900"/>
+    <line x1="300" y1="0" x2="300" y2="900"/>
+    <line x1="500" y1="0" x2="500" y2="900"/>
+    <line x1="700" y1="0" x2="700" y2="900"/>
+    <line x1="900" y1="0" x2="900" y2="900"/>
+    <line x1="1100" y1="0" x2="1100" y2="900"/>
+    <line x1="1300" y1="0" x2="1300" y2="900"/>
+    <line x1="1500" y1="0" x2="1500" y2="900"/>
+  </g>
+
+  <rect width="1600" height="900" fill="url(#vignette)"/>
+</svg>

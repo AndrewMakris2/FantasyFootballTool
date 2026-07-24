@@ -248,32 +248,32 @@ input[type="checkbox"] {
 
 .page--bg-dashboard::before {
   background-image: linear-gradient(180deg, rgba(10, 13, 18, 0.88), rgba(10, 13, 18, 0.96)),
-    url("/images/backgrounds/dashboard.jpg");
+    url("/images/backgrounds/dashboard.svg");
 }
 
 .page--bg-players::before {
   background-image: linear-gradient(180deg, rgba(10, 13, 18, 0.88), rgba(10, 13, 18, 0.96)),
-    url("/images/backgrounds/players.jpg");
+    url("/images/backgrounds/players.svg");
 }
 
 .page--bg-trade::before {
   background-image: linear-gradient(180deg, rgba(10, 13, 18, 0.88), rgba(10, 13, 18, 0.96)),
-    url("/images/backgrounds/trade-analyzer.jpg");
+    url("/images/backgrounds/trade-analyzer.svg");
 }
 
 .page--bg-compare::before {
   background-image: linear-gradient(180deg, rgba(10, 13, 18, 0.88), rgba(10, 13, 18, 0.96)),
-    url("/images/backgrounds/compare.jpg");
+    url("/images/backgrounds/compare.svg");
 }
 
 .page--bg-waiver::before {
   background-image: linear-gradient(180deg, rgba(10, 13, 18, 0.88), rgba(10, 13, 18, 0.96)),
-    url("/images/backgrounds/waiver-wire.jpg");
+    url("/images/backgrounds/waiver-wire.svg");
 }
 
 .page--bg-mock-draft::before {
   background-image: linear-gradient(180deg, rgba(10, 13, 18, 0.88), rgba(10, 13, 18, 0.96)),
-    url("/images/backgrounds/mock-draft.jpg");
+    url("/images/backgrounds/mock-draft.svg");
 }
 
 .page-header {

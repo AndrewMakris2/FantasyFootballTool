@@ -1,17 +1,15 @@
 # Background image spots
 
-Drop your own images into this folder with these exact filenames and they'll
-show up automatically as subtle full-page background art (behind all content,
-dimmed under a dark gradient so nothing loses readability):
+Each main page has a subtle full-page background graphic (dimmed under a dark
+gradient so content stays readable). These ship as original SVG art:
 
-- `dashboard.jpg` — Dashboard
-- `players.jpg` — Player Database
-- `trade-analyzer.jpg` — Trade Analyzer
-- `compare.jpg` — Player Comparison
-- `waiver-wire.jpg` — Waiver Wire
-- `mock-draft.jpg` — Mock Draft
+- `dashboard.svg` — network/overview motif
+- `players.svg` — field yard-line grid
+- `trade-analyzer.svg` — crossing exchange arrows
+- `compare.svg` — mirrored split panels
+- `waiver-wire.svg` — signal pulse rings
+- `mock-draft.svg` — converging stage spotlights
 
-Any common web image format works (.jpg, .png, .webp) — just update the file
-extension in the corresponding CSS rule in `client/src/index.css` (search for
-`page--bg-`) if you use something other than .jpg. No image here yet? Nothing
-breaks — the spot just stays empty until you add one.
+To swap in your own photo instead, replace the corresponding file (any format
+works — .jpg, .png, .webp) and update the file extension in the matching
+`page--bg-*` rule in `client/src/index.css` (search for `page--bg-`).
