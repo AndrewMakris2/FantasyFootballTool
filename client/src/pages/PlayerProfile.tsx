@@ -2,8 +2,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getPlayers } from "../api/players";
 import { getTradeValues } from "../api/tradeValues";
-import { getSeasonStats } from "../api/playerStats";
-import type { SeasonStatsEntry } from "../types/playerStats";
+import { getSeasonStats, getWeeklyStats } from "../api/playerStats";
+import type { SeasonStatsEntry, WeeklyStatLine } from "../types/playerStats";
 import { PlayerAvatar } from "../components/PlayerAvatar";
 import { PositionBadge } from "../components/PositionBadge";
 import { FORMAT_PARAMS } from "../lib/rankingFormats";
@@ -114,6 +114,41 @@ function advancedFieldsFor(position: string): StatField[] {
   }
 }
 
+type WeeklyColumn = { label: string; render: (week: WeeklyStatLine) => string };
+
+// Same position-driven idea as statFieldsFor, but against a single week's box score
+// instead of a season total — QB gets Comp/Att, WR/TE gets targets, etc.
+function weeklyColumnsFor(position: string): WeeklyColumn[] {
+  switch (position) {
+    case "QB":
+      return [
+        { label: "Comp/Att", render: (w) => `${w.completions}/${w.attempts}` },
+        { label: "Pass Yds", render: (w) => w.passingYards.toLocaleString() },
+        { label: "Pass TD", render: (w) => String(w.passingTds) },
+        { label: "INT", render: (w) => String(w.interceptions) },
+        { label: "Rush Yds", render: (w) => w.rushingYards.toLocaleString() },
+      ];
+    case "RB":
+      return [
+        { label: "Carries", render: (w) => String(w.carries) },
+        { label: "Rush Yds", render: (w) => w.rushingYards.toLocaleString() },
+        { label: "Rush TD", render: (w) => String(w.rushingTds) },
+        { label: "Rec", render: (w) => String(w.receptions) },
+        { label: "Rec Yds", render: (w) => w.receivingYards.toLocaleString() },
+      ];
+    case "WR":
+    case "TE":
+      return [
+        { label: "Tgt", render: (w) => String(w.targets) },
+        { label: "Rec", render: (w) => String(w.receptions) },
+        { label: "Rec Yds", render: (w) => w.receivingYards.toLocaleString() },
+        { label: "Rec TD", render: (w) => String(w.receivingTds) },
+      ];
+    default:
+      return [];
+  }
+}
+
 const FORMATS: { key: keyof typeof FORMAT_PARAMS; label: string }[] = [
   { key: "standard", label: "Standard" },
   { key: "half", label: "Half PPR" },
@@ -145,6 +180,11 @@ export function PlayerProfile() {
     queryFn: () => getTradeValues(true, 1),
   });
   const { data: seasonStatsData } = useQuery({ queryKey: ["season-stats"], queryFn: getSeasonStats });
+  const { data: weeklyStatsData } = useQuery({
+    queryKey: ["weekly-stats", player?.playerId],
+    queryFn: () => getWeeklyStats(player!.playerId),
+    enabled: !!player,
+  });
 
   const queriesByFormat = { standard, half, full, dynasty };
 
@@ -262,6 +302,55 @@ export function PlayerProfile() {
                 </div>
               </>
             )}
+          </>
+        );
+      })()}
+
+      {(() => {
+        const weeks = weeklyStatsData?.weeks;
+        const columns = weeklyColumnsFor(player.position);
+        if (!weeks || weeks.length === 0 || columns.length === 0) return null;
+        const maxPoints = Math.max(...weeks.map((w) => w.fantasyPointsPpr), 1);
+        return (
+          <>
+            <h2>Game Log</h2>
+            <p className="data-source-note">Week-by-week box score via nflverse (open data).</p>
+            <div className="data-table-scroll">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Week</th>
+                    <th>Opp</th>
+                    {columns.map((col) => (
+                      <th key={col.label}>{col.label}</th>
+                    ))}
+                    <th>Fantasy Pts (PPR)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {weeks.map((week) => (
+                    <tr key={week.week}>
+                      <td>{week.week}</td>
+                      <td>{week.opponentTeam}</td>
+                      {columns.map((col) => (
+                        <td key={col.label}>{col.render(week)}</td>
+                      ))}
+                      <td>
+                        <div className="game-log-points">
+                          <div className="game-log-points__track">
+                            <div
+                              className="game-log-points__bar"
+                              style={{ width: `${Math.max((week.fantasyPointsPpr / maxPoints) * 100, 3)}%` }}
+                            />
+                          </div>
+                          <span>{week.fantasyPointsPpr.toFixed(1)}</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </>
         );
       })()}

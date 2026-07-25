@@ -1,5 +1,5 @@
 import { getStore } from "@netlify/blobs";
-import type { SeasonStatsEntry } from "../types/playerStats.js";
+import type { SeasonStatsEntry, WeeklyStatLine } from "../types/playerStats.js";
 import { getSleeperCrosswalk } from "./sleeperClient.js";
 
 // nflverse (https://github.com/nflverse/nflverse-data) publishes real per-player weekly
@@ -11,10 +11,10 @@ const STATS_CSV_URL = "https://github.com/nflverse/nflverse-data/releases/downlo
 // field only covers a fraction of current players, so this gives a second hop to try before
 // falling back to name matching.
 const PLAYERS_CROSSWALK_URL = "https://github.com/nflverse/nflverse-data/releases/download/players/players.csv";
-// Bump this whenever SeasonStatsEntry's shape changes — otherwise a stale cached blob
-// from before the change keeps serving the old (missing-fields) shape for up to
-// CACHE_MAX_AGE_MS, since cache invalidation here is purely time-based.
-const CACHE_KEY = "season-stats-v2";
+// Bump this whenever SeasonStatsEntry/WeeklyStatLine's shape changes — otherwise a stale
+// cached blob from before the change keeps serving the old (missing-fields) shape for up
+// to CACHE_MAX_AGE_MS, since cache invalidation here is purely time-based.
+const CACHE_KEY = "player-stats-v3";
 const CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 // Working accumulator used while summing weekly rows — a superset of the public
@@ -32,6 +32,11 @@ interface Accumulator extends Omit<SeasonStatsEntry, "pacr" | "dakota" | "racr" 
   airYardsShareCount: number;
   woprSum: number;
   woprCount: number;
+}
+
+interface ParsedPlayerStats {
+  season: Record<string, SeasonStatsEntry>;
+  weekly: Record<string, WeeklyStatLine[]>;
 }
 
 function parseCsvLine(line: string): string[] {
@@ -156,20 +161,40 @@ function newAccumulator(season: number, displayName: string, team: string): Accu
   };
 }
 
-async function fetchSeasonStatsByGsisId(): Promise<Record<string, Accumulator>> {
+function finalize(acc: Accumulator): SeasonStatsEntry {
+  const { displayName: _displayName, team: _team, dakotaWeightedSum, dakotaAttempts, targetShareSum, targetShareCount, airYardsShareSum, airYardsShareCount, woprSum, woprCount, ...rest } = acc;
+  return {
+    ...rest,
+    pacr: ratio(acc.passingYards, acc.passingAirYards),
+    racr: ratio(acc.receivingYards, acc.receivingAirYards),
+    dakota: dakotaAttempts > 0 ? dakotaWeightedSum / dakotaAttempts : null,
+    targetShare: targetShareCount > 0 ? targetShareSum / targetShareCount : null,
+    airYardsShare: airYardsShareCount > 0 ? airYardsShareSum / airYardsShareCount : null,
+    wopr: woprCount > 0 ? woprSum / woprCount : null,
+  };
+}
+
+async function fetchParsedStatsByGsisId(): Promise<{
+  season: Record<string, Accumulator>;
+  weekly: Record<string, WeeklyStatLine[]>;
+}> {
   const { header: idx, lines } = await fetchCsv(STATS_CSV_URL);
   const bySeasonType = idx.season_type;
   const bySeasonIdx = idx.season;
   const byPlayerIdx = idx.player_id;
   const byNameIdx = idx.player_display_name;
   const byTeamIdx = idx.recent_team;
+  const byWeekIdx = idx.week;
+  const byOpponentIdx = idx.opponent_team;
 
   // The file spans every season back to 1999; only the most recently completed regular
   // season is useful for "how did this player actually perform" on a profile card. Parse
   // every row once, bucket by season, then keep just the max-season bucket — cheaper than
   // scanning the (quote-aware) CSV twice.
   const bySeason = new Map<number, Map<string, Accumulator>>();
+  const weeklyBySeason = new Map<number, Map<string, WeeklyStatLine[]>>();
   let maxSeason = 0;
+
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i];
     if (!line) continue;
@@ -182,6 +207,11 @@ async function fetchSeasonStatsByGsisId(): Promise<Record<string, Accumulator>> 
     if (!agg) {
       agg = new Map<string, Accumulator>();
       bySeason.set(season, agg);
+    }
+    let weeklyAgg = weeklyBySeason.get(season);
+    if (!weeklyAgg) {
+      weeklyAgg = new Map<string, WeeklyStatLine[]>();
+      weeklyBySeason.set(season, weeklyAgg);
     }
 
     const playerId = f[byPlayerIdx];
@@ -250,25 +280,42 @@ async function fetchSeasonStatsByGsisId(): Promise<Record<string, Accumulator>> 
       entry.woprSum += wopr;
       entry.woprCount++;
     }
+
+    const weekLines = weeklyAgg.get(playerId) ?? [];
+    weekLines.push({
+      week: toNum(f[byWeekIdx]),
+      opponentTeam: f[byOpponentIdx],
+      completions: toNum(f[idx.completions]),
+      attempts: weekAttempts,
+      passingYards: toNum(f[idx.passing_yards]),
+      passingTds: toNum(f[idx.passing_tds]),
+      interceptions: toNum(f[idx.interceptions]),
+      carries: toNum(f[idx.carries]),
+      rushingYards: toNum(f[idx.rushing_yards]),
+      rushingTds: toNum(f[idx.rushing_tds]),
+      receptions: toNum(f[idx.receptions]),
+      targets: toNum(f[idx.targets]),
+      receivingYards: toNum(f[idx.receiving_yards]),
+      receivingTds: toNum(f[idx.receiving_tds]),
+      targetShare,
+      wopr,
+      fantasyPoints: toNum(f[idx.fantasy_points]),
+      fantasyPointsPpr: toNum(f[idx.fantasy_points_ppr]),
+    });
+    weeklyAgg.set(playerId, weekLines);
   }
 
-  return Object.fromEntries(bySeason.get(maxSeason) ?? new Map());
+  const season = Object.fromEntries(bySeason.get(maxSeason) ?? new Map());
+  const weekly = Object.fromEntries(
+    [...(weeklyBySeason.get(maxSeason) ?? new Map())].map(([playerId, lines]) => [
+      playerId,
+      [...lines].sort((a, b) => a.week - b.week),
+    ]),
+  );
+  return { season, weekly };
 }
 
-function finalize(acc: Accumulator): SeasonStatsEntry {
-  const { displayName: _displayName, team: _team, dakotaWeightedSum, dakotaAttempts, targetShareSum, targetShareCount, airYardsShareSum, airYardsShareCount, woprSum, woprCount, ...rest } = acc;
-  return {
-    ...rest,
-    pacr: ratio(acc.passingYards, acc.passingAirYards),
-    racr: ratio(acc.receivingYards, acc.receivingAirYards),
-    dakota: dakotaAttempts > 0 ? dakotaWeightedSum / dakotaAttempts : null,
-    targetShare: targetShareCount > 0 ? targetShareSum / targetShareCount : null,
-    airYardsShare: airYardsShareCount > 0 ? airYardsShareSum / airYardsShareCount : null,
-    wopr: woprCount > 0 ? woprSum / woprCount : null,
-  };
-}
-
-export async function getSeasonStats(): Promise<Record<string, SeasonStatsEntry>> {
+async function loadPlayerStats(): Promise<ParsedPlayerStats> {
   const store = getStore("stats-cache");
   const cached = await store.getWithMetadata(CACHE_KEY, { type: "json" });
   const fetchedAt = cached?.metadata.fetchedAt as number | undefined;
@@ -276,27 +323,48 @@ export async function getSeasonStats(): Promise<Record<string, SeasonStatsEntry>
     return cached.data;
   }
 
-  const [statsByGsisId, gsisToEspn, crosswalk] = await Promise.all([
-    fetchSeasonStatsByGsisId(),
+  const [{ season: seasonByGsisId, weekly: weeklyByGsisId }, gsisToEspn, crosswalk] = await Promise.all([
+    fetchParsedStatsByGsisId(),
     fetchGsisToEspnMap(),
     getSleeperCrosswalk(),
   ]);
 
-  const bySleeperId: Record<string, SeasonStatsEntry> = {};
-  for (const [gsisId, acc] of Object.entries(statsByGsisId)) {
-    const nameKey = acc.displayName.toLowerCase();
+  function resolveSleeperId(gsisId: string, displayName: string, team: string): string | undefined {
+    const nameKey = displayName.toLowerCase();
     const espnId = gsisToEspn[gsisId];
-
-    const sleeperId =
+    return (
       crosswalk.byGsisId[gsisId] ??
       (espnId ? crosswalk.byEspnId[espnId] : undefined) ??
-      crosswalk.byNameTeam[`${nameKey}|${acc.team}`] ??
-      (crosswalk.byNameOnly[nameKey]?.length === 1 ? crosswalk.byNameOnly[nameKey][0] : undefined);
-
-    if (!sleeperId) continue;
-    bySleeperId[sleeperId] = finalize(acc);
+      crosswalk.byNameTeam[`${nameKey}|${team}`] ??
+      (crosswalk.byNameOnly[nameKey]?.length === 1 ? crosswalk.byNameOnly[nameKey][0] : undefined)
+    );
   }
 
-  await store.setJSON(CACHE_KEY, bySleeperId, { metadata: { fetchedAt: Date.now() } });
-  return bySleeperId;
+  const season: Record<string, SeasonStatsEntry> = {};
+  for (const [gsisId, acc] of Object.entries(seasonByGsisId)) {
+    const sleeperId = resolveSleeperId(gsisId, acc.displayName, acc.team);
+    if (!sleeperId) continue;
+    season[sleeperId] = finalize(acc);
+  }
+
+  const weekly: Record<string, WeeklyStatLine[]> = {};
+  for (const [gsisId, lines] of Object.entries(weeklyByGsisId)) {
+    const acc = seasonByGsisId[gsisId];
+    if (!acc) continue;
+    const sleeperId = resolveSleeperId(gsisId, acc.displayName, acc.team);
+    if (!sleeperId) continue;
+    weekly[sleeperId] = lines;
+  }
+
+  const result: ParsedPlayerStats = { season, weekly };
+  await store.setJSON(CACHE_KEY, result, { metadata: { fetchedAt: Date.now() } });
+  return result;
+}
+
+export async function getSeasonStats(): Promise<Record<string, SeasonStatsEntry>> {
+  return (await loadPlayerStats()).season;
+}
+
+export async function getWeeklyStats(): Promise<Record<string, WeeklyStatLine[]>> {
+  return (await loadPlayerStats()).weekly;
 }

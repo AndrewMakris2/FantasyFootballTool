@@ -610,6 +610,27 @@ section {
   border-radius: var(--radius-lg);
 }
 
+.game-log-points {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.game-log-points__track {
+  width: 60px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-3);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.game-log-points__bar {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--accent-gradient);
+}
+
 .data-table-scroll--frozen-first .data-table th:first-child,
 .data-table-scroll--frozen-first .data-table td:first-child {
   position: sticky;

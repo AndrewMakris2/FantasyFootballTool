@@ -55,3 +55,24 @@ export interface SeasonStatsEntry {
   fantasyPoints: number;
   fantasyPointsPpr: number;
 }
+
+export interface WeeklyStatLine {
+  week: number;
+  opponentTeam: string;
+  completions: number;
+  attempts: number;
+  passingYards: number;
+  passingTds: number;
+  interceptions: number;
+  carries: number;
+  rushingYards: number;
+  rushingTds: number;
+  receptions: number;
+  targets: number;
+  receivingYards: number;
+  receivingTds: number;
+  targetShare: number | null;
+  wopr: number | null;
+  fantasyPoints: number;
+  fantasyPointsPpr: number;
+}
