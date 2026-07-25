@@ -11,7 +11,10 @@ const STATS_CSV_URL = "https://github.com/nflverse/nflverse-data/releases/downlo
 // field only covers a fraction of current players, so this gives a second hop to try before
 // falling back to name matching.
 const PLAYERS_CROSSWALK_URL = "https://github.com/nflverse/nflverse-data/releases/download/players/players.csv";
-const CACHE_KEY = "season-stats";
+// Bump this whenever SeasonStatsEntry's shape changes — otherwise a stale cached blob
+// from before the change keeps serving the old (missing-fields) shape for up to
+// CACHE_MAX_AGE_MS, since cache invalidation here is purely time-based.
+const CACHE_KEY = "season-stats-v2";
 const CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 // Working accumulator used while summing weekly rows — a superset of the public
