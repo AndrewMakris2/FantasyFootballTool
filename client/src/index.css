@@ -570,6 +570,7 @@ section {
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   font-variant-numeric: tabular-nums;
+  opacity: 70%;
 }
 
 .data-table th,
