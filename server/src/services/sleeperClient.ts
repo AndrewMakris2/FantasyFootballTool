@@ -63,6 +63,8 @@ interface SleeperPlayerMeta {
   injury_status?: string | null;
   depth_chart_position?: string | null;
   depth_chart_order?: number | null;
+  gsis_id?: string | null;
+  espn_id?: number | string | null;
 }
 
 async function sleeperGet<T>(pathname: string): Promise<T> {
@@ -137,6 +139,41 @@ function isFantasyRelevant(meta: SleeperPlayerMeta): boolean {
   if (!meta.team) return false;
   if (!meta.position || !FANTASY_POSITIONS.has(meta.position)) return false;
   return true;
+}
+
+export interface SleeperCrosswalk {
+  byGsisId: Record<string, string>;
+  byEspnId: Record<string, string>;
+  byNameTeam: Record<string, string>;
+  byNameOnly: Record<string, string[]>;
+}
+
+// nflverse (season stats) keys players by GSIS ID, not Sleeper ID. Sleeper's own gsis_id
+// field only covers a fraction of current players (it's sparse/unmaintained even for
+// stars), so statsClient falls back through espn_id, then name+team, then unique
+// name-only matching — all built from data we're already caching, no extra fetch here.
+export async function getSleeperCrosswalk(): Promise<SleeperCrosswalk> {
+  const playersMap = await getPlayersMap();
+  const byGsisId: Record<string, string> = {};
+  const byEspnId: Record<string, string> = {};
+  const byNameTeam: Record<string, string> = {};
+  const byNameOnly: Record<string, string[]> = {};
+
+  for (const [playerId, meta] of Object.entries(playersMap)) {
+    if (meta.gsis_id) byGsisId[meta.gsis_id] = playerId;
+    if (meta.espn_id) byEspnId[String(meta.espn_id)] = playerId;
+
+    const name = meta.full_name ?? `${meta.first_name ?? ""} ${meta.last_name ?? ""}`.trim();
+    if (!name) continue;
+    const nameKey = name.toLowerCase();
+
+    if (meta.team) byNameTeam[`${nameKey}|${meta.team}`] = playerId;
+    if (meta.position && FANTASY_POSITIONS.has(meta.position)) {
+      (byNameOnly[nameKey] ??= []).push(playerId);
+    }
+  }
+
+  return { byGsisId, byEspnId, byNameTeam, byNameOnly };
 }
 
 export async function getFantasyRelevantPlayers(): Promise<PlayerProfile[]> {

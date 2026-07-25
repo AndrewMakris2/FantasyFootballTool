@@ -2,6 +2,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getPlayers } from "../api/players";
 import { getTradeValues } from "../api/tradeValues";
+import { getSeasonStats } from "../api/playerStats";
+import type { SeasonStatsEntry } from "../types/playerStats";
 import { PlayerAvatar } from "../components/PlayerAvatar";
 import { PositionBadge } from "../components/PositionBadge";
 import { FORMAT_PARAMS } from "../lib/rankingFormats";
@@ -16,6 +18,42 @@ function formatHeight(inches: number | null): string {
   const feet = Math.floor(inches / 12);
   const remainder = inches % 12;
   return `${feet}'${remainder}"`;
+}
+
+// Which raw counting stats are worth showing depends entirely on position — a WR's
+// completions are always zero and just clutter the card, same for a QB's targets.
+function statFieldsFor(position: string): { label: string; key: keyof SeasonStatsEntry }[] {
+  switch (position) {
+    case "QB":
+      return [
+        { label: "Comp", key: "completions" },
+        { label: "Att", key: "attempts" },
+        { label: "Pass Yds", key: "passingYards" },
+        { label: "Pass TD", key: "passingTds" },
+        { label: "INT", key: "interceptions" },
+        { label: "Rush Yds", key: "rushingYards" },
+        { label: "Rush TD", key: "rushingTds" },
+      ];
+    case "RB":
+      return [
+        { label: "Carries", key: "carries" },
+        { label: "Rush Yds", key: "rushingYards" },
+        { label: "Rush TD", key: "rushingTds" },
+        { label: "Rec", key: "receptions" },
+        { label: "Rec Yds", key: "receivingYards" },
+        { label: "Rec TD", key: "receivingTds" },
+      ];
+    case "WR":
+    case "TE":
+      return [
+        { label: "Targets", key: "targets" },
+        { label: "Rec", key: "receptions" },
+        { label: "Rec Yds", key: "receivingYards" },
+        { label: "Rec TD", key: "receivingTds" },
+      ];
+    default:
+      return [];
+  }
 }
 
 const FORMATS: { key: keyof typeof FORMAT_PARAMS; label: string }[] = [
@@ -48,6 +86,7 @@ export function PlayerProfile() {
     queryKey: ["trade-values", true, 1],
     queryFn: () => getTradeValues(true, 1),
   });
+  const { data: seasonStatsData } = useQuery({ queryKey: ["season-stats"], queryFn: getSeasonStats });
 
   const queriesByFormat = { standard, half, full, dynasty };
 
@@ -128,6 +167,30 @@ export function PlayerProfile() {
           </div>
         </div>
       </div>
+
+      {(() => {
+        const seasonEntry = seasonStatsData?.stats[player.playerId];
+        const fields = statFieldsFor(player.position);
+        if (!seasonEntry || fields.length === 0) return null;
+        return (
+          <>
+            <h2>{seasonEntry.season} Season Stats</h2>
+            <p className="data-source-note">Real per-player stats via nflverse (open data) &middot; {seasonEntry.games} games played.</p>
+            <div className="ranking-cards">
+              {fields.map(({ label, key }) => (
+                <div key={label} className="ranking-card">
+                  <span className="ranking-card__label">{label}</span>
+                  <span className="ranking-card__value">{(seasonEntry[key] as number).toLocaleString()}</span>
+                </div>
+              ))}
+              <div className="ranking-card">
+                <span className="ranking-card__label">Fantasy Pts (PPR)</span>
+                <span className="ranking-card__value">{seasonEntry.fantasyPointsPpr.toFixed(1)}</span>
+              </div>
+            </div>
+          </>
+        );
+      })()}
 
       <h2>Rankings by Format</h2>
       <p className="data-source-note">Trade values via FantasyCalc.</p>
