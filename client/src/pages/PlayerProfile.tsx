@@ -20,9 +20,22 @@ function formatHeight(inches: number | null): string {
   return `${feet}'${remainder}"`;
 }
 
+type StatField = { label: string; key: keyof SeasonStatsEntry; format?: (value: number) => string };
+
+const asInt = (value: number) => value.toLocaleString();
+const asDecimal1 = (value: number) => value.toFixed(1);
+const asDecimal2 = (value: number) => value.toFixed(2);
+const asPercent = (value: number) => `${(value * 100).toFixed(1)}%`;
+
+function renderStatValue(entry: SeasonStatsEntry, field: StatField): string {
+  const raw = entry[field.key];
+  if (raw === null || raw === undefined) return "—";
+  return (field.format ?? asInt)(raw as number);
+}
+
 // Which raw counting stats are worth showing depends entirely on position — a WR's
 // completions are always zero and just clutter the card, same for a QB's targets.
-function statFieldsFor(position: string): { label: string; key: keyof SeasonStatsEntry }[] {
+function statFieldsFor(position: string): StatField[] {
   switch (position) {
     case "QB":
       return [
@@ -50,6 +63,51 @@ function statFieldsFor(position: string): { label: string; key: keyof SeasonStat
         { label: "Rec", key: "receptions" },
         { label: "Rec Yds", key: "receivingYards" },
         { label: "Rec TD", key: "receivingTds" },
+      ];
+    default:
+      return [];
+  }
+}
+
+// The deep-cut advanced metrics nflverse's data unlocks — efficiency and opportunity
+// stats beyond the box score, again split by position since a QB's target share and a
+// WR's DAKOTA are both meaningless.
+function advancedFieldsFor(position: string): StatField[] {
+  switch (position) {
+    case "QB":
+      return [
+        { label: "Sacks", key: "sacks" },
+        { label: "Sack Yds", key: "sackYards" },
+        { label: "Pass Air Yds", key: "passingAirYards" },
+        { label: "Pass YAC", key: "passingYardsAfterCatch" },
+        { label: "Pass 1st Downs", key: "passingFirstDowns" },
+        { label: "Pass EPA", key: "passingEpa", format: asDecimal1 },
+        { label: "PACR", key: "pacr", format: asDecimal2 },
+        { label: "DAKOTA", key: "dakota", format: asDecimal2 },
+        { label: "Pass 2PT", key: "passing2ptConversions" },
+      ];
+    case "RB":
+      return [
+        { label: "Fumbles", key: "rushingFumbles" },
+        { label: "Fumbles Lost", key: "rushingFumblesLost" },
+        { label: "Rush 1st Downs", key: "rushingFirstDowns" },
+        { label: "Rush EPA", key: "rushingEpa", format: asDecimal1 },
+        { label: "Rec EPA", key: "receivingEpa", format: asDecimal1 },
+        { label: "Target Share", key: "targetShare", format: asPercent },
+        { label: "WOPR", key: "wopr", format: asDecimal2 },
+      ];
+    case "WR":
+    case "TE":
+      return [
+        { label: "Air Yards", key: "receivingAirYards" },
+        { label: "YAC", key: "receivingYardsAfterCatch" },
+        { label: "Rec 1st Downs", key: "receivingFirstDowns" },
+        { label: "Rec EPA", key: "receivingEpa", format: asDecimal1 },
+        { label: "RACR", key: "racr", format: asDecimal2 },
+        { label: "Target Share", key: "targetShare", format: asPercent },
+        { label: "Air Yards Share", key: "airYardsShare", format: asPercent },
+        { label: "WOPR", key: "wopr", format: asDecimal2 },
+        { label: "Fumbles", key: "receivingFumbles" },
       ];
     default:
       return [];
@@ -171,16 +229,17 @@ export function PlayerProfile() {
       {(() => {
         const seasonEntry = seasonStatsData?.stats[player.playerId];
         const fields = statFieldsFor(player.position);
+        const advancedFields = advancedFieldsFor(player.position);
         if (!seasonEntry || fields.length === 0) return null;
         return (
           <>
             <h2>{seasonEntry.season} Season Stats</h2>
             <p className="data-source-note">Real per-player stats via nflverse (open data) &middot; {seasonEntry.games} games played.</p>
             <div className="ranking-cards">
-              {fields.map(({ label, key }) => (
-                <div key={label} className="ranking-card">
-                  <span className="ranking-card__label">{label}</span>
-                  <span className="ranking-card__value">{(seasonEntry[key] as number).toLocaleString()}</span>
+              {fields.map((field) => (
+                <div key={field.label} className="ranking-card">
+                  <span className="ranking-card__label">{field.label}</span>
+                  <span className="ranking-card__value">{renderStatValue(seasonEntry, field)}</span>
                 </div>
               ))}
               <div className="ranking-card">
@@ -188,6 +247,21 @@ export function PlayerProfile() {
                 <span className="ranking-card__value">{seasonEntry.fantasyPointsPpr.toFixed(1)}</span>
               </div>
             </div>
+
+            {advancedFields.length > 0 && (
+              <>
+                <h2>Advanced Metrics</h2>
+                <p className="data-source-note">Efficiency &amp; opportunity stats &mdash; EPA, air yards, target share, and friends.</p>
+                <div className="ranking-cards">
+                  {advancedFields.map((field) => (
+                    <div key={field.label} className="ranking-card">
+                      <span className="ranking-card__label">{field.label}</span>
+                      <span className="ranking-card__value">{renderStatValue(seasonEntry, field)}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </>
         );
       })()}

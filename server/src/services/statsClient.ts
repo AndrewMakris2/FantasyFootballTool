@@ -14,9 +14,21 @@ const PLAYERS_CROSSWALK_URL = "https://github.com/nflverse/nflverse-data/release
 const CACHE_KEY = "season-stats";
 const CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
-interface AggregatedEntry extends SeasonStatsEntry {
+// Working accumulator used while summing weekly rows — a superset of the public
+// SeasonStatsEntry shape, plus the extra running totals needed to derive ratio/average
+// fields (pacr, racr, dakota, target/air-yards share, wopr) correctly at the end instead
+// of naively summing or averaging values that aren't linear across weeks.
+interface Accumulator extends Omit<SeasonStatsEntry, "pacr" | "dakota" | "racr" | "targetShare" | "airYardsShare" | "wopr"> {
   displayName: string;
   team: string;
+  dakotaWeightedSum: number;
+  dakotaAttempts: number;
+  targetShareSum: number;
+  targetShareCount: number;
+  airYardsShareSum: number;
+  airYardsShareCount: number;
+  woprSum: number;
+  woprCount: number;
 }
 
 function parseCsvLine(line: string): string[] {
@@ -54,6 +66,16 @@ function toNum(value: string | undefined): number {
   return Number.isFinite(num) ? num : 0;
 }
 
+function toNullableNum(value: string | undefined): number | null {
+  if (!value) return null;
+  const num = Number(value);
+  return Number.isFinite(num) ? num : null;
+}
+
+function ratio(numerator: number, denominator: number): number | null {
+  return denominator !== 0 ? numerator / denominator : null;
+}
+
 async function fetchCsv(url: string): Promise<{ header: Record<string, number>; lines: string[] }> {
   const res = await fetch(url);
   if (!res.ok) {
@@ -80,7 +102,58 @@ async function fetchGsisToEspnMap(): Promise<Record<string, string>> {
   return map;
 }
 
-async function fetchSeasonStatsByGsisId(): Promise<Record<string, AggregatedEntry>> {
+function newAccumulator(season: number, displayName: string, team: string): Accumulator {
+  return {
+    season,
+    displayName,
+    team,
+    games: 0,
+    completions: 0,
+    attempts: 0,
+    passingYards: 0,
+    passingTds: 0,
+    interceptions: 0,
+    sacks: 0,
+    sackYards: 0,
+    passingAirYards: 0,
+    passingYardsAfterCatch: 0,
+    passingFirstDowns: 0,
+    passingEpa: 0,
+    passing2ptConversions: 0,
+    carries: 0,
+    rushingYards: 0,
+    rushingTds: 0,
+    rushingFumbles: 0,
+    rushingFumblesLost: 0,
+    rushingFirstDowns: 0,
+    rushingEpa: 0,
+    rushing2ptConversions: 0,
+    receptions: 0,
+    targets: 0,
+    receivingYards: 0,
+    receivingTds: 0,
+    receivingFumbles: 0,
+    receivingFumblesLost: 0,
+    receivingAirYards: 0,
+    receivingYardsAfterCatch: 0,
+    receivingFirstDowns: 0,
+    receivingEpa: 0,
+    receiving2ptConversions: 0,
+    specialTeamsTds: 0,
+    fantasyPoints: 0,
+    fantasyPointsPpr: 0,
+    dakotaWeightedSum: 0,
+    dakotaAttempts: 0,
+    targetShareSum: 0,
+    targetShareCount: 0,
+    airYardsShareSum: 0,
+    airYardsShareCount: 0,
+    woprSum: 0,
+    woprCount: 0,
+  };
+}
+
+async function fetchSeasonStatsByGsisId(): Promise<Record<string, Accumulator>> {
   const { header: idx, lines } = await fetchCsv(STATS_CSV_URL);
   const bySeasonType = idx.season_type;
   const bySeasonIdx = idx.season;
@@ -92,7 +165,7 @@ async function fetchSeasonStatsByGsisId(): Promise<Record<string, AggregatedEntr
   // season is useful for "how did this player actually perform" on a profile card. Parse
   // every row once, bucket by season, then keep just the max-season bucket — cheaper than
   // scanning the (quote-aware) CSV twice.
-  const bySeason = new Map<number, Map<string, AggregatedEntry>>();
+  const bySeason = new Map<number, Map<string, Accumulator>>();
   let maxSeason = 0;
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i];
@@ -104,55 +177,92 @@ async function fetchSeasonStatsByGsisId(): Promise<Record<string, AggregatedEntr
 
     let agg = bySeason.get(season);
     if (!agg) {
-      agg = new Map<string, AggregatedEntry>();
+      agg = new Map<string, Accumulator>();
       bySeason.set(season, agg);
     }
 
     const playerId = f[byPlayerIdx];
     let entry = agg.get(playerId);
     if (!entry) {
-      entry = {
-        season,
-        displayName: f[byNameIdx],
-        team: f[byTeamIdx],
-        games: 0,
-        completions: 0,
-        attempts: 0,
-        passingYards: 0,
-        passingTds: 0,
-        interceptions: 0,
-        carries: 0,
-        rushingYards: 0,
-        rushingTds: 0,
-        receptions: 0,
-        targets: 0,
-        receivingYards: 0,
-        receivingTds: 0,
-        fantasyPoints: 0,
-        fantasyPointsPpr: 0,
-      };
+      entry = newAccumulator(season, f[byNameIdx], f[byTeamIdx]);
       agg.set(playerId, entry);
     }
-    // Most-recent-team-seen wins, in case of a mid-season trade.
-    entry.team = f[byTeamIdx];
+
+    entry.team = f[byTeamIdx]; // most-recent-team-seen wins, in case of a mid-season trade
     entry.games++;
     entry.completions += toNum(f[idx.completions]);
     entry.attempts += toNum(f[idx.attempts]);
     entry.passingYards += toNum(f[idx.passing_yards]);
     entry.passingTds += toNum(f[idx.passing_tds]);
     entry.interceptions += toNum(f[idx.interceptions]);
+    entry.sacks += toNum(f[idx.sacks]);
+    entry.sackYards += toNum(f[idx.sack_yards]);
+    entry.passingAirYards += toNum(f[idx.passing_air_yards]);
+    entry.passingYardsAfterCatch += toNum(f[idx.passing_yards_after_catch]);
+    entry.passingFirstDowns += toNum(f[idx.passing_first_downs]);
+    entry.passingEpa += toNum(f[idx.passing_epa]);
+    entry.passing2ptConversions += toNum(f[idx.passing_2pt_conversions]);
     entry.carries += toNum(f[idx.carries]);
     entry.rushingYards += toNum(f[idx.rushing_yards]);
     entry.rushingTds += toNum(f[idx.rushing_tds]);
+    entry.rushingFumbles += toNum(f[idx.rushing_fumbles]);
+    entry.rushingFumblesLost += toNum(f[idx.rushing_fumbles_lost]);
+    entry.rushingFirstDowns += toNum(f[idx.rushing_first_downs]);
+    entry.rushingEpa += toNum(f[idx.rushing_epa]);
+    entry.rushing2ptConversions += toNum(f[idx.rushing_2pt_conversions]);
     entry.receptions += toNum(f[idx.receptions]);
     entry.targets += toNum(f[idx.targets]);
     entry.receivingYards += toNum(f[idx.receiving_yards]);
     entry.receivingTds += toNum(f[idx.receiving_tds]);
+    entry.receivingFumbles += toNum(f[idx.receiving_fumbles]);
+    entry.receivingFumblesLost += toNum(f[idx.receiving_fumbles_lost]);
+    entry.receivingAirYards += toNum(f[idx.receiving_air_yards]);
+    entry.receivingYardsAfterCatch += toNum(f[idx.receiving_yards_after_catch]);
+    entry.receivingFirstDowns += toNum(f[idx.receiving_first_downs]);
+    entry.receivingEpa += toNum(f[idx.receiving_epa]);
+    entry.receiving2ptConversions += toNum(f[idx.receiving_2pt_conversions]);
+    entry.specialTeamsTds += toNum(f[idx.special_teams_tds]);
     entry.fantasyPoints += toNum(f[idx.fantasy_points]);
     entry.fantasyPointsPpr += toNum(f[idx.fantasy_points_ppr]);
+
+    const weekAttempts = toNum(f[idx.attempts]);
+    const dakota = toNullableNum(f[idx.dakota]);
+    if (dakota !== null && weekAttempts > 0) {
+      entry.dakotaWeightedSum += dakota * weekAttempts;
+      entry.dakotaAttempts += weekAttempts;
+    }
+
+    const targetShare = toNullableNum(f[idx.target_share]);
+    if (targetShare !== null) {
+      entry.targetShareSum += targetShare;
+      entry.targetShareCount++;
+    }
+    const airYardsShare = toNullableNum(f[idx.air_yards_share]);
+    if (airYardsShare !== null) {
+      entry.airYardsShareSum += airYardsShare;
+      entry.airYardsShareCount++;
+    }
+    const wopr = toNullableNum(f[idx.wopr]);
+    if (wopr !== null) {
+      entry.woprSum += wopr;
+      entry.woprCount++;
+    }
   }
 
   return Object.fromEntries(bySeason.get(maxSeason) ?? new Map());
+}
+
+function finalize(acc: Accumulator): SeasonStatsEntry {
+  const { displayName: _displayName, team: _team, dakotaWeightedSum, dakotaAttempts, targetShareSum, targetShareCount, airYardsShareSum, airYardsShareCount, woprSum, woprCount, ...rest } = acc;
+  return {
+    ...rest,
+    pacr: ratio(acc.passingYards, acc.passingAirYards),
+    racr: ratio(acc.receivingYards, acc.receivingAirYards),
+    dakota: dakotaAttempts > 0 ? dakotaWeightedSum / dakotaAttempts : null,
+    targetShare: targetShareCount > 0 ? targetShareSum / targetShareCount : null,
+    airYardsShare: airYardsShareCount > 0 ? airYardsShareSum / airYardsShareCount : null,
+    wopr: woprCount > 0 ? woprSum / woprCount : null,
+  };
 }
 
 export async function getSeasonStats(): Promise<Record<string, SeasonStatsEntry>> {
@@ -170,18 +280,18 @@ export async function getSeasonStats(): Promise<Record<string, SeasonStatsEntry>
   ]);
 
   const bySleeperId: Record<string, SeasonStatsEntry> = {};
-  for (const [gsisId, { displayName, team, ...entry }] of Object.entries(statsByGsisId)) {
-    const nameKey = displayName.toLowerCase();
+  for (const [gsisId, acc] of Object.entries(statsByGsisId)) {
+    const nameKey = acc.displayName.toLowerCase();
     const espnId = gsisToEspn[gsisId];
 
     const sleeperId =
       crosswalk.byGsisId[gsisId] ??
       (espnId ? crosswalk.byEspnId[espnId] : undefined) ??
-      crosswalk.byNameTeam[`${nameKey}|${team}`] ??
+      crosswalk.byNameTeam[`${nameKey}|${acc.team}`] ??
       (crosswalk.byNameOnly[nameKey]?.length === 1 ? crosswalk.byNameOnly[nameKey][0] : undefined);
 
     if (!sleeperId) continue;
-    bySleeperId[sleeperId] = entry;
+    bySleeperId[sleeperId] = finalize(acc);
   }
 
   await store.setJSON(CACHE_KEY, bySleeperId, { metadata: { fetchedAt: Date.now() } });
