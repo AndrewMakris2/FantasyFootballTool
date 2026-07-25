@@ -1,6 +1,7 @@
 import { getStore, getDeployStore } from "@netlify/blobs";
 import { encrypt, decrypt } from "./crypto.js";
 import type { CustomRankingSet } from "../types/customRanking.js";
+import type { CheatSheet } from "../types/cheatSheet.js";
 
 export interface YahooTokens {
   accessToken: string;
@@ -104,4 +105,20 @@ export async function removeFromWatchlist(playerId: string): Promise<string[]> {
   const ids = (await getWatchlist()).filter((id) => id !== playerId);
   await appStore().setJSON("watchlist", ids);
   return ids;
+}
+
+export async function getCheatSheets(): Promise<Record<string, CheatSheet>> {
+  return (await appStore().get("cheatSheets", { type: "json" })) ?? {};
+}
+
+export async function saveCheatSheet(sheet: CheatSheet): Promise<void> {
+  const sheets = await getCheatSheets();
+  sheets[sheet.id] = sheet;
+  await appStore().setJSON("cheatSheets", sheets);
+}
+
+export async function deleteCheatSheet(id: string): Promise<void> {
+  const sheets = await getCheatSheets();
+  delete sheets[id];
+  await appStore().setJSON("cheatSheets", sheets);
 }

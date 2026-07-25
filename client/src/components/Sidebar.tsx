@@ -31,6 +31,9 @@ export function Sidebar() {
         <NavLink to="/import-rankings" className={navLinkClass}>
           Import Rankings
         </NavLink>
+        <NavLink to="/cheat-sheets" className={navLinkClass}>
+          Cheat Sheets
+        </NavLink>
       </nav>
     </aside>
   );

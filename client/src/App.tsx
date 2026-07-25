@@ -10,6 +10,8 @@ import { WaiverWire } from "./pages/WaiverWire";
 import { PlayerProfile } from "./pages/PlayerProfile";
 import { MockDraft } from "./pages/MockDraft";
 import { ImportRankings } from "./pages/ImportRankings";
+import { CheatSheets } from "./pages/CheatSheets";
+import { CheatSheetEditor } from "./pages/CheatSheetEditor";
 import { NotFound } from "./pages/NotFound";
 
 function App() {
@@ -28,6 +30,8 @@ function App() {
           <Route path="/waiver-wire" element={<WaiverWire />} />
           <Route path="/mock-draft" element={<MockDraft />} />
           <Route path="/import-rankings" element={<ImportRankings />} />
+          <Route path="/cheat-sheets" element={<CheatSheets />} />
+          <Route path="/cheat-sheets/:id" element={<CheatSheetEditor />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
