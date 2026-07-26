@@ -1,9 +1,14 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getPlayers } from "../api/players";
 import { getCustomRankingSets, saveCustomRankingSet, deleteCustomRankingSet } from "../api/customRankings";
 import { parseRankingList, buildValueEntries, type ParseRankingResult } from "../lib/parseRankingImport";
 import { PlayerSearchAdd } from "../components/PlayerSearchAdd";
+import { PlayerAvatar } from "../components/PlayerAvatar";
+import { PositionBadge } from "../components/PositionBadge";
+import { TeamTag } from "../components/TeamTag";
+import { medalClass } from "../lib/medal";
 import type { PlayerProfile } from "../types/player";
 
 interface ResolvedEntry {
@@ -11,11 +16,14 @@ interface ResolvedEntry {
   player: PlayerProfile;
 }
 
+const POSITION_FILTERS = ["ALL", "QB", "RB", "WR", "TE", "K", "DEF"];
+
 export function ImportRankings() {
   const queryClient = useQueryClient();
   const { data: playersData } = useQuery({ queryKey: ["players"], queryFn: getPlayers });
   const { data: customSetsData } = useQuery({ queryKey: ["custom-rankings"], queryFn: getCustomRankingSets });
   const players = useMemo(() => playersData?.players ?? [], [playersData]);
+  const playersById = useMemo(() => new Map(players.map((p) => [p.playerId, p])), [players]);
 
   const [name, setName] = useState("");
   const [rawText, setRawText] = useState("");
@@ -24,6 +32,9 @@ export function ImportRankings() {
   const [skipped, setSkipped] = useState<Set<number>>(new Set());
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const [viewingSetName, setViewingSetName] = useState<string | null>(null);
+  const [positionFilter, setPositionFilter] = useState("ALL");
 
   function handlePreview() {
     if (players.length === 0) return;
@@ -73,8 +84,20 @@ export function ImportRankings() {
 
   async function handleDelete(setName: string) {
     await deleteCustomRankingSet(setName);
+    if (viewingSetName === setName) setViewingSetName(null);
     await queryClient.invalidateQueries({ queryKey: ["custom-rankings"] });
   }
+
+  const viewingSet = viewingSetName ? customSetsData?.sets[viewingSetName] : undefined;
+
+  const viewingRows = useMemo(() => {
+    if (!viewingSet) return [];
+    const rows = Object.entries(viewingSet.entries)
+      .map(([playerId, entry]) => ({ entry, player: playersById.get(playerId) }))
+      .filter((row): row is { entry: (typeof row)["entry"]; player: PlayerProfile } => !!row.player)
+      .sort((a, b) => a.entry.overallRank - b.entry.overallRank);
+    return positionFilter === "ALL" ? rows : rows.filter((row) => row.player.position === positionFilter);
+  }, [viewingSet, playersById, positionFilter]);
 
   return (
     <div className="page">
@@ -83,12 +106,13 @@ export function ImportRankings() {
       </div>
       <p className="empty-state">
         Paste a ranked player list from any site or expert — one player per line, in rank order. We'll
-        match each line to a player in our database so you can draft off of it in Mock Draft.
+        match each line to a player in our database so you can draft off of it in Mock Draft. This is a
+        manual, one-time import — paste a fresh list whenever you want to refresh it.
       </p>
 
       <div className="import-rankings__form">
         <label>
-          Ranking set name
+          <span className="import-rankings__step">1</span> Ranking set name
           <input
             type="text"
             placeholder="e.g. Expert Redraft Big Board"
@@ -97,7 +121,7 @@ export function ImportRankings() {
           />
         </label>
         <label>
-          Paste your list
+          <span className="import-rankings__step">2</span> Paste your list
           <textarea
             rows={12}
             placeholder={"1. Ja'Marr Chase WR CIN\n2. Bijan Robinson RB ATL\n3. ..."}
@@ -185,17 +209,88 @@ export function ImportRankings() {
       {customSetsData && Object.keys(customSetsData.sets).length > 0 && (
         <div className="import-rankings__saved">
           <h2>Saved Ranking Sets</h2>
-          <ul>
-            {Object.values(customSetsData.sets).map((set) => (
-              <li key={set.name}>
-                <span>{set.name}</span>
-                <span className="empty-state">{Object.keys(set.entries).length} players</span>
-                <button type="button" onClick={() => handleDelete(set.name)}>
-                  Delete
+          <div className="ranking-set-grid">
+            {Object.values(customSetsData.sets).map((set) => {
+              const entries = Object.entries(set.entries);
+              const positionCounts: Record<string, number> = {};
+              for (const [playerId] of entries) {
+                const pos = playersById.get(playerId)?.position ?? "UNK";
+                positionCounts[pos] = (positionCounts[pos] ?? 0) + 1;
+              }
+              return (
+                <button
+                  key={set.name}
+                  type="button"
+                  className={`ranking-set-card ${viewingSetName === set.name ? "ranking-set-card--active" : ""}`}
+                  onClick={() => setViewingSetName(viewingSetName === set.name ? null : set.name)}
+                >
+                  <span className="ranking-set-card__name">{set.name}</span>
+                  <span className="ranking-set-card__count">{entries.length} players</span>
+                  <div className="ranking-set-card__bar">
+                    {Object.entries(positionCounts).map(([pos, count]) => (
+                      <span
+                        key={pos}
+                        className={`ranking-set-card__bar-segment ranking-set-card__bar-segment--${pos}`}
+                        style={{ width: `${(count / entries.length) * 100}%` }}
+                        title={`${pos}: ${count}`}
+                      />
+                    ))}
+                  </div>
                 </button>
-              </li>
-            ))}
-          </ul>
+              );
+            })}
+          </div>
+
+          {viewingSet && (
+            <div className="ranking-set-viewer">
+              <div className="ranking-set-viewer__header">
+                <h3>{viewingSetName}</h3>
+                <div className="ranking-set-viewer__actions">
+                  <div className="ranking-set-viewer__filters">
+                    {POSITION_FILTERS.map((pos) => (
+                      <button
+                        key={pos}
+                        type="button"
+                        className={`ranking-set-filter-chip ${positionFilter === pos ? "ranking-set-filter-chip--active" : ""}`}
+                        onClick={() => setPositionFilter(pos)}
+                      >
+                        {pos === "ALL" ? "All" : pos}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    className="ranking-set-viewer__delete"
+                    onClick={() => handleDelete(viewingSetName!)}
+                  >
+                    Delete Set
+                  </button>
+                </div>
+              </div>
+
+              <div className="ranking-set-list">
+                {viewingRows.length === 0 && <p className="empty-state">No players at this position.</p>}
+                {viewingRows.map(({ entry, player }) => (
+                  <Link key={player.playerId} to={`/players/${player.playerId}`} className="ranking-set-row">
+                    <span className={`ranking-set-row__rank ${medalClass(entry.overallRank)}`}>
+                      #{entry.overallRank}
+                    </span>
+                    <PlayerAvatar
+                      playerId={player.playerId}
+                      name={player.name}
+                      position={player.position}
+                      team={player.team}
+                      size="sm"
+                    />
+                    <span className="ranking-set-row__name">{player.name}</span>
+                    <PositionBadge position={player.position} />
+                    <TeamTag team={player.team} />
+                    <span className="ranking-set-row__pos-rank">Pos #{entry.positionRank}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
