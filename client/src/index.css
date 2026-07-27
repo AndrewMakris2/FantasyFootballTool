@@ -2079,6 +2079,92 @@ h1 .watchlist-button {
   margin-bottom: 0.6rem;
 }
 
+/* ---------- Draft grades ---------- */
+
+.draft-grades-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.9rem;
+  margin-bottom: 2rem;
+}
+
+.draft-grade-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.draft-grade-card--you {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-glow);
+}
+
+.draft-grade-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.2rem;
+}
+
+.draft-grade-card__team {
+  font-weight: 800;
+  font-size: 0.92rem;
+}
+
+.draft-grade-card__letter {
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.draft-grade-card--A .draft-grade-card__letter {
+  color: var(--success);
+}
+
+.draft-grade-card--B .draft-grade-card__letter {
+  color: var(--accent);
+}
+
+.draft-grade-card--C .draft-grade-card__letter {
+  color: var(--warning);
+}
+
+.draft-grade-card--D .draft-grade-card__letter {
+  color: var(--bronze);
+}
+
+.draft-grade-card--F .draft-grade-card__letter {
+  color: var(--danger);
+}
+
+.draft-grade-card__surplus {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.draft-grade-card__line {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.draft-grade-card__line strong {
+  color: var(--text);
+}
+
+.draft-grade-card__notes {
+  margin: 0.2rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
 /* ---------- Cheat sheets ---------- */
 
 .cheat-sheet-grid {

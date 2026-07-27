@@ -5,6 +5,7 @@ import { getTradeValues } from "../api/tradeValues";
 import { getCustomRankingSets } from "../api/customRankings";
 import { FORMAT_PARAMS } from "../lib/rankingFormats";
 import { buildPickOrder, chooseBestPick, slotForManualPick, totalRounds } from "../lib/mockDraftEngine";
+import { gradeDraft } from "../lib/draftGrading";
 import { DraftSettingsForm } from "../components/DraftSettingsForm";
 import { DraftBoardGrid } from "../components/DraftBoardGrid";
 import { DraftRosterPanel } from "../components/DraftRosterPanel";
@@ -80,6 +81,12 @@ export function MockDraft() {
   const draftComplete = settings !== null && currentPickIndex >= pickOrder.length && pickOrder.length > 0;
   const isBotTurn = draftLoaded && currentPick && currentPick.teamIndex !== settings!.userTeamIndex;
 
+  const grades = useMemo(() => {
+    if (!settings || !draftComplete) return [];
+    return gradeDraft(picks, settings.numTeams, settings.rosterSlots, values, playersById);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings, draftComplete, picks, values, playersById]);
+
   function makePick(playerId: string) {
     if (!settings || !currentPick) return;
     const player = playersById.get(playerId);
@@ -154,6 +161,51 @@ export function MockDraft() {
           playersById={playersById}
           teamLabel={teamLabel}
         />
+
+        <h2>Draft Grades</h2>
+        <p className="data-source-note">
+          Graded on value vs. pick slot — how each pick's rank compared to where it was taken, relative to
+          the rest of this draft.
+        </p>
+        <div className="draft-grades-grid">
+          {grades.map((grade) => (
+            <div
+              key={grade.teamIndex}
+              className={`draft-grade-card draft-grade-card--${grade.letter[0]} ${
+                grade.teamIndex === settings.userTeamIndex ? "draft-grade-card--you" : ""
+              }`}
+            >
+              <div className="draft-grade-card__header">
+                <span className="draft-grade-card__team">{teamLabel(grade.teamIndex)}</span>
+                <span className="draft-grade-card__letter">{grade.letter}</span>
+              </div>
+              <p className="draft-grade-card__surplus">
+                {grade.totalSurplus > 0 ? "+" : ""}
+                {grade.totalSurplus} value vs. pick slot
+              </p>
+              {grade.bestPick && (
+                <p className="draft-grade-card__line">
+                  <strong>Best value:</strong> {grade.bestPick.player.name} (Rd {grade.bestPick.pick.round}){" "}
+                  {grade.bestPick.surplus > 0 ? `+${grade.bestPick.surplus}` : grade.bestPick.surplus}
+                </p>
+              )}
+              {grade.worstPick && (
+                <p className="draft-grade-card__line">
+                  <strong>Biggest reach:</strong> {grade.worstPick.player.name} (Rd {grade.worstPick.pick.round}){" "}
+                  {grade.worstPick.surplus}
+                </p>
+              )}
+              {grade.notes.length > 0 && (
+                <ul className="draft-grade-card__notes">
+                  {grade.notes.map((note) => (
+                    <li key={note}>{note}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))}
+        </div>
+
         <div className="draft-summary-grid">
           {Array.from({ length: settings.numTeams }, (_, teamIndex) => (
             <div key={teamIndex} className="draft-summary-team">
