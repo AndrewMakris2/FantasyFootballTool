@@ -44,7 +44,3 @@ export function generateDraftPickAssets(): DraftPickAsset[] {
 
   return assets;
 }
-
-export function isDraftPickId(id: string): boolean {
-  return id.startsWith("pick-");
-}

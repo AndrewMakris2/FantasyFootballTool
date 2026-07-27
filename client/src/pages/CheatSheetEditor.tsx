@@ -43,6 +43,7 @@ export function CheatSheetEditor() {
   const { data: playersData } = useQuery({ queryKey: ["players"], queryFn: getPlayers });
 
   const [sheet, setSheet] = useState<CheatSheet | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const initializedRef = useRef(false);
 
   useEffect(() => {
@@ -57,7 +58,12 @@ export function CheatSheetEditor() {
   useEffect(() => {
     if (!sheet) return;
     const timeout = setTimeout(() => {
-      saveCheatSheet(sheet).then(() => queryClient.invalidateQueries({ queryKey: ["cheat-sheets"] }));
+      saveCheatSheet(sheet)
+        .then(() => {
+          setSaveError(null);
+          return queryClient.invalidateQueries({ queryKey: ["cheat-sheets"] });
+        })
+        .catch((err) => setSaveError((err as Error).message));
     }, 600);
     return () => clearTimeout(timeout);
   }, [sheet, queryClient]);
@@ -123,6 +129,8 @@ export function CheatSheetEditor() {
           onChange={(e) => updateSheet({ name: e.target.value })}
         />
       </div>
+
+      {saveError && <p className="error-text">Couldn't save: {saveError}</p>}
 
       <div className="filter-bar">
         <select

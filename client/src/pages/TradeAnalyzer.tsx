@@ -122,7 +122,13 @@ export function TradeAnalyzer() {
           </select>
           {leagueDetail && (
             <>
-              <select value={teamAId} onChange={(e) => setTeamAId(e.target.value)}>
+              <select
+                value={teamAId}
+                onChange={(e) => {
+                  setTeamAId(e.target.value);
+                  setLeagueSelectedA([]);
+                }}
+              >
                 <option value="">Team A...</option>
                 {leagueDetail.teams.map((t) => (
                   <option key={t.teamId} value={t.teamId}>
@@ -130,7 +136,13 @@ export function TradeAnalyzer() {
                   </option>
                 ))}
               </select>
-              <select value={teamBId} onChange={(e) => setTeamBId(e.target.value)}>
+              <select
+                value={teamBId}
+                onChange={(e) => {
+                  setTeamBId(e.target.value);
+                  setLeagueSelectedB([]);
+                }}
+              >
                 <option value="">Team B...</option>
                 {leagueDetail.teams.map((t) => (
                   <option key={t.teamId} value={t.teamId}>

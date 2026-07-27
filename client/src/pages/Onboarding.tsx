@@ -6,6 +6,7 @@ import {
   linkYahooLeagues,
   previewSleeperLeagues,
   previewYahooLeagues,
+  getSleeperStatus,
 } from "../api/leagues";
 import { getYahooStatus } from "../api/leagues";
 
@@ -17,6 +18,7 @@ export function Onboarding() {
   const [selectedYahooKeys, setSelectedYahooKeys] = useState<Set<string>>(new Set());
   const [linkError, setLinkError] = useState<string | null>(null);
 
+  const sleeperStatus = useQuery({ queryKey: ["sleeper-status"], queryFn: getSleeperStatus });
   const sleeperPreview = useQuery({
     queryKey: ["sleeper-preview", lookupUsername],
     queryFn: () => previewSleeperLeagues(lookupUsername!),
@@ -62,6 +64,12 @@ export function Onboarding() {
 
       <section className="onboarding-section onboarding-section--sleeper">
         <h2>Sleeper</h2>
+        {sleeperStatus.data?.connected && (
+          <p className="data-source-note">
+            Already connected as <strong>{sleeperStatus.data.username}</strong> &middot;{" "}
+            {sleeperStatus.data.leagueIds.length} league(s) linked. Search another username below to add more.
+          </p>
+        )}
         <form
           onSubmit={(e) => {
             e.preventDefault();

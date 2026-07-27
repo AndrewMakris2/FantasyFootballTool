@@ -1,6 +1,6 @@
 import { getStore } from "@netlify/blobs";
 import type { SeasonStatsEntry, WeeklyStatLine } from "../types/playerStats.js";
-import { getSleeperCrosswalk } from "./sleeperClient.js";
+import { getSleeperCrosswalk, normalizeTeamAbbr } from "./sleeperClient.js";
 
 // nflverse (https://github.com/nflverse/nflverse-data) publishes real per-player weekly
 // stats as open data, explicitly licensed for public reuse — unlike proprietary "expert
@@ -323,42 +323,50 @@ async function loadPlayerStats(): Promise<ParsedPlayerStats> {
     return cached.data;
   }
 
-  const [{ season: seasonByGsisId, weekly: weeklyByGsisId }, gsisToEspn, crosswalk] = await Promise.all([
-    fetchParsedStatsByGsisId(),
-    fetchGsisToEspnMap(),
-    getSleeperCrosswalk(),
-  ]);
+  try {
+    const [{ season: seasonByGsisId, weekly: weeklyByGsisId }, gsisToEspn, crosswalk] = await Promise.all([
+      fetchParsedStatsByGsisId(),
+      fetchGsisToEspnMap(),
+      getSleeperCrosswalk(),
+    ]);
 
-  function resolveSleeperId(gsisId: string, displayName: string, team: string): string | undefined {
-    const nameKey = displayName.toLowerCase();
-    const espnId = gsisToEspn[gsisId];
-    return (
-      crosswalk.byGsisId[gsisId] ??
-      (espnId ? crosswalk.byEspnId[espnId] : undefined) ??
-      crosswalk.byNameTeam[`${nameKey}|${team}`] ??
-      (crosswalk.byNameOnly[nameKey]?.length === 1 ? crosswalk.byNameOnly[nameKey][0] : undefined)
-    );
+    function resolveSleeperId(gsisId: string, displayName: string, team: string): string | undefined {
+      const nameKey = displayName.toLowerCase();
+      const espnId = gsisToEspn[gsisId];
+      return (
+        crosswalk.byGsisId[gsisId] ??
+        (espnId ? crosswalk.byEspnId[espnId] : undefined) ??
+        crosswalk.byNameTeam[`${nameKey}|${normalizeTeamAbbr(team)}`] ??
+        (crosswalk.byNameOnly[nameKey]?.length === 1 ? crosswalk.byNameOnly[nameKey][0] : undefined)
+      );
+    }
+
+    const season: Record<string, SeasonStatsEntry> = {};
+    for (const [gsisId, acc] of Object.entries(seasonByGsisId)) {
+      const sleeperId = resolveSleeperId(gsisId, acc.displayName, acc.team);
+      if (!sleeperId) continue;
+      season[sleeperId] = finalize(acc);
+    }
+
+    const weekly: Record<string, WeeklyStatLine[]> = {};
+    for (const [gsisId, lines] of Object.entries(weeklyByGsisId)) {
+      const acc = seasonByGsisId[gsisId];
+      if (!acc) continue;
+      const sleeperId = resolveSleeperId(gsisId, acc.displayName, acc.team);
+      if (!sleeperId) continue;
+      weekly[sleeperId] = lines;
+    }
+
+    const result: ParsedPlayerStats = { season, weekly };
+    await store.setJSON(CACHE_KEY, result, { metadata: { fetchedAt: Date.now() } });
+    return result;
+  } catch (err) {
+    // nflverse (or the Sleeper crosswalk it depends on) can have transient outages —
+    // serving stale-but-present data beats a 502 and avoids a thundering herd of
+    // concurrent re-fetches from every request that lands during the outage.
+    if (cached) return cached.data;
+    throw err;
   }
-
-  const season: Record<string, SeasonStatsEntry> = {};
-  for (const [gsisId, acc] of Object.entries(seasonByGsisId)) {
-    const sleeperId = resolveSleeperId(gsisId, acc.displayName, acc.team);
-    if (!sleeperId) continue;
-    season[sleeperId] = finalize(acc);
-  }
-
-  const weekly: Record<string, WeeklyStatLine[]> = {};
-  for (const [gsisId, lines] of Object.entries(weeklyByGsisId)) {
-    const acc = seasonByGsisId[gsisId];
-    if (!acc) continue;
-    const sleeperId = resolveSleeperId(gsisId, acc.displayName, acc.team);
-    if (!sleeperId) continue;
-    weekly[sleeperId] = lines;
-  }
-
-  const result: ParsedPlayerStats = { season, weekly };
-  await store.setJSON(CACHE_KEY, result, { metadata: { fetchedAt: Date.now() } });
-  return result;
 }
 
 export async function getSeasonStats(): Promise<Record<string, SeasonStatsEntry>> {

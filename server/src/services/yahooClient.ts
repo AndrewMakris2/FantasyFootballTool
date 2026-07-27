@@ -179,7 +179,7 @@ export async function getLeagueDetail(leagueKey: string): Promise<League> {
   const standingsTeamsRaw = extractItems(leagueNode[1].standings[0].teams) as any[];
   const standings: TeamStanding[] = standingsTeamsRaw.map((teamWrapper) => {
     const teamArr = teamWrapper.team;
-    const teamMeta = extractItems(teamArr[0][0] ? teamArr[0] : teamArr[0]) as any[];
+    const teamMeta = extractItems(teamArr[0]) as any[];
     const teamStandings = teamArr[1]?.team_standings ?? {};
     const nameEntry = teamArr[0].find((e: any) => e && e.name);
     return {
@@ -200,7 +200,9 @@ export async function getLeagueDetail(leagueKey: string): Promise<League> {
   // logged-in user's GUID; find it via is_owned_by_current_login flag instead.
   const myTeamWrapper = standingsTeamsRaw.find((teamWrapper) => {
     const teamMeta = teamWrapper.team[0] as any[];
-    return teamMeta.some((e) => e && e.is_owned_by_current_login === 1);
+    // Yahoo's XML->JSON conversion isn't always consistent about numeric vs. string
+    // types for this flag, so accept either.
+    return teamMeta.some((e) => e && (e.is_owned_by_current_login === 1 || e.is_owned_by_current_login === "1"));
   });
 
   const myTeamMeta = myTeamWrapper ? (myTeamWrapper.team[0] as any[]) : [];

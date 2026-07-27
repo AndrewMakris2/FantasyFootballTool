@@ -26,7 +26,13 @@ export default async (req: Request, _context: Context) => {
   }
 
   if (pathname === "/api/sleeper/link" && req.method === "POST") {
-    const { username, leagueIds } = (await req.json()) as { username: string; leagueIds: string[] };
+    let body: { username?: string; leagueIds?: string[] };
+    try {
+      body = (await req.json()) as { username?: string; leagueIds?: string[] };
+    } catch {
+      return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+    const { username, leagueIds } = body;
     if (!username || !Array.isArray(leagueIds)) {
       return Response.json({ error: "username and leagueIds are required" }, { status: 400 });
     }

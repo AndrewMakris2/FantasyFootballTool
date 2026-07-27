@@ -35,7 +35,17 @@ export function DraftSettingsForm({ onStart }: { onStart: (settings: DraftSettin
   const customSets = customSetsData ? Object.values(customSetsData.sets) : [];
 
   function updateSlot(key: RosterSlotKey, value: number) {
-    setRosterSlots({ ...rosterSlots, [key]: Math.max(0, value) });
+    if (!Number.isFinite(value)) return;
+    setRosterSlots({ ...rosterSlots, [key]: Math.max(0, Math.min(10, value)) });
+  }
+
+  function updateNumTeams(value: number) {
+    if (!Number.isFinite(value)) return;
+    const clamped = Math.min(16, Math.max(2, value));
+    setNumTeams(clamped);
+    // A previously-picked draft slot can be out of range once the team count shrinks —
+    // without this, starting the draft locks the user out of ever picking for themselves.
+    setUserTeamIndex((prev) => (prev === "random" ? prev : Math.min(prev, clamped - 1)));
   }
 
   function handleStart() {
@@ -53,7 +63,7 @@ export function DraftSettingsForm({ onStart }: { onStart: (settings: DraftSettin
             min={2}
             max={16}
             value={numTeams}
-            onChange={(e) => setNumTeams(Math.min(16, Math.max(2, Number(e.target.value))))}
+            onChange={(e) => updateNumTeams(Number(e.target.value))}
           />
         </label>
 

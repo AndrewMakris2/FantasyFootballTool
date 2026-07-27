@@ -39,7 +39,14 @@ export default async (req: Request, _context: Context) => {
   }
 
   if (pathname === "/api/yahoo/status" && req.method === "GET") {
-    const connected = await yahoo.isYahooConnected();
+    // A corrupted token blob or a rotated SESSION_SECRET would throw deep inside
+    // decrypt() — degrade to "not connected" instead of a raw 500 in that case.
+    let connected: boolean;
+    try {
+      connected = await yahoo.isYahooConnected();
+    } catch {
+      connected = false;
+    }
     const leagueKeys = await getLinkedYahooLeagueKeys();
     return Response.json({ connected, leagueKeys });
   }
@@ -54,7 +61,13 @@ export default async (req: Request, _context: Context) => {
   }
 
   if (pathname === "/api/yahoo/link" && req.method === "POST") {
-    const { leagueKeys } = (await req.json()) as { leagueKeys: string[] };
+    let body: { leagueKeys?: string[] };
+    try {
+      body = (await req.json()) as { leagueKeys?: string[] };
+    } catch {
+      return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+    const { leagueKeys } = body;
     if (!Array.isArray(leagueKeys)) {
       return Response.json({ error: "leagueKeys is required" }, { status: 400 });
     }

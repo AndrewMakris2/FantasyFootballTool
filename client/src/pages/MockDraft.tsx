@@ -91,9 +91,15 @@ export function MockDraft() {
     if (!settings || !currentPick) return;
     const player = playersById.get(playerId);
     if (!player) return;
-    const teamPicks = picks.filter((p) => p.teamIndex === currentPick.teamIndex);
-    const slot = slotForManualPick(player, teamPicks, settings.rosterSlots);
-    setPicks([...picks, { ...currentPick, playerId, slot }]);
+    const pickSlot = currentPick;
+    const rosterSlots = settings.rosterSlots;
+    // Functional update so two rapid-fire calls (e.g. a fast double-click) each see the
+    // other's result instead of both reading the same stale `picks` and one clobbering it.
+    setPicks((prev) => {
+      const teamPicks = prev.filter((p) => p.teamIndex === pickSlot.teamIndex);
+      const slot = slotForManualPick(player, teamPicks, rosterSlots);
+      return [...prev, { ...pickSlot, playerId, slot }];
+    });
   }
 
   useEffect(() => {
@@ -218,6 +224,19 @@ export function MockDraft() {
             </div>
           ))}
         </div>
+      </div>
+    );
+  }
+
+  if (!currentPick) {
+    return (
+      <div className="page page--bg-mock-draft">
+        <p className="error-text">
+          Something went wrong setting up this draft (invalid settings). Please start over.
+        </p>
+        <button type="button" onClick={restart}>
+          Start Over
+        </button>
       </div>
     );
   }

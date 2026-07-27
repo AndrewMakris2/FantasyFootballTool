@@ -32,7 +32,7 @@ export async function getTradeValues(
   isDynasty: boolean,
   ppr: number = 1,
 ): Promise<Record<string, TradeValueEntry>> {
-  const cacheKey = `${isDynasty ? "dynasty" : "redraft"}-ppr${ppr}`;
+  const cacheKey = `${isDynasty ? "dynasty" : "redraft"}-ppr${ppr}-v2`;
   const store = getStore("tradevalue-cache");
   const cached = await store.getWithMetadata(cacheKey, { type: "json" });
   const fetchedAt = cached?.metadata.fetchedAt as number | undefined;
@@ -40,19 +40,26 @@ export async function getTradeValues(
     return cached.data;
   }
 
-  const entries = await fetchFantasyCalcValues(isDynasty, ppr);
-  const values: Record<string, TradeValueEntry> = {};
-  for (const entry of entries) {
-    if (!entry.player.sleeperId) continue;
-    values[entry.player.sleeperId] = {
-      sleeperId: entry.player.sleeperId,
-      value: entry.value,
-      overallRank: entry.overallRank,
-      positionRank: entry.positionRank,
-      trend30Day: entry.trend30Day,
-    };
-  }
+  try {
+    const entries = await fetchFantasyCalcValues(isDynasty, ppr);
+    const values: Record<string, TradeValueEntry> = {};
+    for (const entry of entries) {
+      if (!entry.player.sleeperId) continue;
+      values[entry.player.sleeperId] = {
+        sleeperId: entry.player.sleeperId,
+        value: entry.value,
+        overallRank: entry.overallRank,
+        positionRank: entry.positionRank,
+        trend30Day: entry.trend30Day,
+      };
+    }
 
-  await store.setJSON(cacheKey, values, { metadata: { fetchedAt: Date.now() } });
-  return values;
+    await store.setJSON(cacheKey, values, { metadata: { fetchedAt: Date.now() } });
+    return values;
+  } catch (err) {
+    // FantasyCalc can have transient outages — serving stale-but-present data beats
+    // a 502 and avoids a thundering herd of concurrent re-fetches during the outage.
+    if (cached) return cached.data;
+    throw err;
+  }
 }

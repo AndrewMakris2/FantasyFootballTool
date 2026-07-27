@@ -5,7 +5,8 @@ export default async (req: Request, _context: Context) => {
   const params = new URL(req.url).searchParams;
   const isDynasty = params.get("dynasty") === "true";
   const pprParam = params.get("ppr");
-  const ppr = pprParam !== null ? Number(pprParam) : 1;
+  const parsedPpr = pprParam !== null ? Number(pprParam) : 1;
+  const ppr = Number.isFinite(parsedPpr) ? Math.min(1, Math.max(0, parsedPpr)) : 1;
 
   try {
     const values = await getTradeValues(isDynasty, ppr);

@@ -9,7 +9,12 @@ export default async (req: Request, _context: Context) => {
   }
 
   if (req.method === "POST") {
-    const body = (await req.json()) as Partial<CheatSheet>;
+    let body: Partial<CheatSheet>;
+    try {
+      body = (await req.json()) as Partial<CheatSheet>;
+    } catch {
+      return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
     if (!body.id) {
       return Response.json({ error: "id is required" }, { status: 400 });
     }

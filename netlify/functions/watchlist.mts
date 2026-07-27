@@ -8,7 +8,12 @@ export default async (req: Request, _context: Context) => {
   }
 
   if (req.method === "POST") {
-    const body = (await req.json()) as { playerId?: string };
+    let body: { playerId?: string };
+    try {
+      body = (await req.json()) as { playerId?: string };
+    } catch {
+      return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
     if (!body.playerId) return Response.json({ error: "playerId is required" }, { status: 400 });
     const playerIds = await addToWatchlist(body.playerId);
     return Response.json({ playerIds });

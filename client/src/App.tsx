@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useParams } from "react-router-dom";
 import { Sidebar } from "./components/Sidebar";
 import { Dashboard } from "./pages/Dashboard";
 import { Onboarding } from "./pages/Onboarding";
@@ -13,6 +13,15 @@ import { ImportRankings } from "./pages/ImportRankings";
 import { CheatSheets } from "./pages/CheatSheets";
 import { CheatSheetEditor } from "./pages/CheatSheetEditor";
 import { NotFound } from "./pages/NotFound";
+
+// CheatSheetEditor keeps local component state (the sheet being edited) tied to the :id
+// param. React Router reuses the same component instance across param changes on the
+// same route, so without a param-derived key it would keep autosaving the previous
+// sheet's data under the new URL if the id ever changed while mounted.
+function CheatSheetEditorRoute() {
+  const { id } = useParams<{ id: string }>();
+  return <CheatSheetEditor key={id} />;
+}
 
 function App() {
   return (
@@ -31,7 +40,7 @@ function App() {
           <Route path="/mock-draft" element={<MockDraft />} />
           <Route path="/import-rankings" element={<ImportRankings />} />
           <Route path="/cheat-sheets" element={<CheatSheets />} />
-          <Route path="/cheat-sheets/:id" element={<CheatSheetEditor />} />
+          <Route path="/cheat-sheets/:id" element={<CheatSheetEditorRoute />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

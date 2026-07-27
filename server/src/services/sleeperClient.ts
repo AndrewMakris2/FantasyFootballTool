@@ -5,8 +5,9 @@ import type { PlayerProfile } from "../types/player.js";
 const FANTASY_POSITIONS = new Set(["QB", "RB", "WR", "TE", "K", "DEF"]);
 
 const BASE_URL = "https://api.sleeper.app/v1";
-const CURRENT_SEASON = String(new Date().getFullYear());
-const PLAYERS_CACHE_KEY = "players";
+// Bump the suffix if the cached shape/behavior ever changes — same reasoning as
+// statsClient.ts's versioned cache key, so a stale blob can't silently linger.
+const PLAYERS_CACHE_KEY = "players-v2";
 const PLAYERS_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 interface SleeperUser {
@@ -79,8 +80,17 @@ export async function findUserByUsername(username: string): Promise<SleeperUser>
   return sleeperGet<SleeperUser>(`/user/${encodeURIComponent(username)}`);
 }
 
-export async function getLeaguesForUser(userId: string, season = CURRENT_SEASON): Promise<SleeperLeague[]> {
-  return sleeperGet<SleeperLeague[]>(`/user/${userId}/leagues/nfl/${season}`);
+// Sleeper's own idea of "the current season" — NOT the calendar year. Their season only
+// rolls over around March/April, so using `new Date().getFullYear()` as a stand-in would
+// query next season's (still-empty) leagues for the first few months of every year.
+async function getCurrentSeason(): Promise<string> {
+  const state = await sleeperGet<{ season: string }>("/state/nfl");
+  return state.season;
+}
+
+export async function getLeaguesForUser(userId: string, season?: string): Promise<SleeperLeague[]> {
+  const resolvedSeason = season ?? (await getCurrentSeason());
+  return sleeperGet<SleeperLeague[]>(`/user/${userId}/leagues/nfl/${resolvedSeason}`);
 }
 
 async function getPlayersMap(): Promise<Record<string, SleeperPlayerMeta>> {
@@ -148,6 +158,17 @@ export interface SleeperCrosswalk {
   byNameOnly: Record<string, string[]>;
 }
 
+// Sleeper and nflverse occasionally disagree on the abbreviation for the same franchise
+// (nflverse uses "LA" for the Rams, Sleeper uses "LAR") — normalize before using a team
+// code as part of a cross-source lookup key, or matches silently never fire.
+const TEAM_ABBR_ALIASES: Record<string, string> = {
+  LA: "LAR",
+};
+
+export function normalizeTeamAbbr(team: string): string {
+  return TEAM_ABBR_ALIASES[team] ?? team;
+}
+
 // nflverse (season stats) keys players by GSIS ID, not Sleeper ID. Sleeper's own gsis_id
 // field only covers a fraction of current players (it's sparse/unmaintained even for
 // stars), so statsClient falls back through espn_id, then name+team, then unique
@@ -167,7 +188,7 @@ export async function getSleeperCrosswalk(): Promise<SleeperCrosswalk> {
     if (!name) continue;
     const nameKey = name.toLowerCase();
 
-    if (meta.team) byNameTeam[`${nameKey}|${meta.team}`] = playerId;
+    if (meta.team) byNameTeam[`${nameKey}|${normalizeTeamAbbr(meta.team)}`] = playerId;
     if (meta.position && FANTASY_POSITIONS.has(meta.position)) {
       (byNameOnly[nameKey] ??= []).push(playerId);
     }

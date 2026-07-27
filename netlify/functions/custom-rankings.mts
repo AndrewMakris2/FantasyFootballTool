@@ -13,7 +13,12 @@ export default async (req: Request, _context: Context) => {
   }
 
   if (req.method === "POST") {
-    const body = (await req.json()) as { name?: string; entries?: Record<string, TradeValueEntry> };
+    let body: { name?: string; entries?: Record<string, TradeValueEntry> };
+    try {
+      body = (await req.json()) as { name?: string; entries?: Record<string, TradeValueEntry> };
+    } catch {
+      return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
     if (!body.name || !body.entries) {
       return Response.json({ error: "name and entries are required" }, { status: 400 });
     }
