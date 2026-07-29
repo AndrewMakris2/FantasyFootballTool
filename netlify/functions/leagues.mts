@@ -59,6 +59,35 @@ export default async (req: Request, _context: Context) => {
     return Response.json(await getMergedLeagues());
   }
 
+  const transactionsMatch = pathname.match(/^\/api\/leagues\/([^/]+)\/([^/]+)\/transactions$/);
+  if (transactionsMatch && req.method === "GET") {
+    const [, platform, leagueId] = transactionsMatch;
+    try {
+      const transactions =
+        platform === "sleeper"
+          ? await sleeper.getLeagueTransactions(leagueId)
+          : platform === "yahoo"
+            ? await yahoo.getLeagueTransactions(leagueId)
+            : null;
+      if (transactions === null) return Response.json({ error: `Unknown platform ${platform}` }, { status: 400 });
+      return Response.json({ transactions });
+    } catch (err) {
+      return Response.json({ error: (err as Error).message }, { status: 502 });
+    }
+  }
+
+  const draftMatch = pathname.match(/^\/api\/leagues\/([^/]+)\/([^/]+)\/draft$/);
+  if (draftMatch && req.method === "GET") {
+    const [, platform, leagueId] = draftMatch;
+    try {
+      if (platform === "sleeper") return Response.json(await sleeper.getLeagueDraft(leagueId));
+      if (platform === "yahoo") return Response.json(await yahoo.getLeagueDraft(leagueId));
+      return Response.json({ error: `Unknown platform ${platform}` }, { status: 400 });
+    } catch (err) {
+      return Response.json({ error: (err as Error).message }, { status: 502 });
+    }
+  }
+
   const match = pathname.match(/^\/api\/leagues\/([^/]+)\/([^/]+)$/);
   if (match && req.method === "GET") {
     const [, platform, leagueId] = match;

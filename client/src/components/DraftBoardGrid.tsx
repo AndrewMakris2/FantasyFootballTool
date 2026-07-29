@@ -1,18 +1,31 @@
-import type { DraftPick, PickSlot } from "../types/draft";
-import type { PlayerProfile } from "../types/player";
+import type { PickSlot } from "../types/draft";
 import { PositionBadge } from "./PositionBadge";
+
+// Structural rather than the Mock Draft-specific DraftPick/PlayerProfile types so this
+// board can be reused for a real league's draft recap, which has a differently-shaped
+// pick (no overallPick/slot) and only a name + position per player, not a full profile.
+interface DraftBoardPick {
+  round: number;
+  teamIndex: number;
+  playerId: string;
+}
+
+interface DraftBoardPlayer {
+  name: string;
+  position: string;
+}
 
 interface DraftBoardGridProps {
   numTeams: number;
   rounds: number;
-  picks: DraftPick[];
+  picks: DraftBoardPick[];
   currentPick: PickSlot | undefined;
-  playersById: Map<string, PlayerProfile>;
+  playersById: Map<string, DraftBoardPlayer>;
   teamLabel: (teamIndex: number) => string;
 }
 
 export function DraftBoardGrid({ numTeams, rounds, picks, currentPick, playersById, teamLabel }: DraftBoardGridProps) {
-  const byRoundTeam = new Map<string, DraftPick>();
+  const byRoundTeam = new Map<string, DraftBoardPick>();
   for (const pick of picks) byRoundTeam.set(`${pick.round}-${pick.teamIndex}`, pick);
 
   const teamIndices = Array.from({ length: numTeams }, (_, i) => i);

@@ -1,5 +1,5 @@
 import { apiGet, apiPost } from "./client";
-import type { League, LeagueSummary, Platform } from "../types/league";
+import type { League, LeagueDraft, LeagueSummary, LeagueTransaction, Platform } from "../types/league";
 
 export interface SleeperPreviewLeague {
   league_id: string;
@@ -20,6 +20,14 @@ export function getLeagues() {
 
 export function getLeagueDetail(platform: Platform, leagueId: string) {
   return apiGet<League>(`/leagues/${platform}/${leagueId}`);
+}
+
+export function getLeagueTransactions(platform: Platform, leagueId: string) {
+  return apiGet<{ transactions: LeagueTransaction[] }>(`/leagues/${platform}/${leagueId}/transactions`);
+}
+
+export function getLeagueDraft(platform: Platform, leagueId: string) {
+  return apiGet<LeagueDraft>(`/leagues/${platform}/${leagueId}/draft`);
 }
 
 export function previewSleeperLeagues(username: string) {

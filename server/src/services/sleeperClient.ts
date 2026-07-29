@@ -1,5 +1,14 @@
 import { getStore } from "@netlify/blobs";
-import type { League, Matchup, Player, TeamRoster, TeamStanding } from "../types/league.js";
+import type {
+  League,
+  LeagueDraft,
+  LeagueDraftPick,
+  LeagueTransaction,
+  Matchup,
+  Player,
+  TeamRoster,
+  TeamStanding,
+} from "../types/league.js";
 import type { PlayerProfile } from "../types/player.js";
 
 const FANTASY_POSITIONS = new Set(["QB", "RB", "WR", "TE", "K", "DEF"]);
@@ -20,6 +29,12 @@ interface SleeperLeague {
   league_id: string;
   name: string;
   season: string;
+  total_rosters?: number;
+  roster_positions?: string[];
+  scoring_settings?: Record<string, number>;
+  settings?: {
+    playoff_teams?: number;
+  };
 }
 
 interface SleeperRoster {
@@ -112,7 +127,21 @@ function toPlayer(playerId: string, meta: SleeperPlayerMeta | undefined): Player
     name: meta?.full_name ?? (`${meta?.first_name ?? ""} ${meta?.last_name ?? ""}`.trim() || playerId),
     position: meta?.position ?? "UNK",
     team: meta?.team ?? null,
+    injuryStatus: meta?.injury_status ?? null,
   };
+}
+
+function playerName(playerId: string, meta: SleeperPlayerMeta | undefined): string {
+  return meta?.full_name ?? (`${meta?.first_name ?? ""} ${meta?.last_name ?? ""}`.trim() || playerId);
+}
+
+// Sleeper's scoring_settings is a flat map of stat -> point value. "rec" (points per
+// reception) is the one that actually distinguishes standard/half/full PPR leagues.
+function scoringTypeFor(scoringSettings: Record<string, number> | undefined): string {
+  const rec = scoringSettings?.rec ?? 0;
+  if (rec >= 1) return "Full PPR";
+  if (rec >= 0.5) return "Half PPR";
+  return "Standard";
 }
 
 function toNumber(value: string | number | null | undefined): number | null {
@@ -311,5 +340,124 @@ export async function getLeagueDetail(leagueId: string, userId: string): Promise
     teams,
     standings,
     currentMatchup,
+    settings: {
+      scoringType: scoringTypeFor(leagueMeta.scoring_settings),
+      rosterPositions: leagueMeta.roster_positions ?? [],
+      playoffTeams: leagueMeta.settings?.playoff_teams ?? null,
+      totalRosters: leagueMeta.total_rosters ?? rosters.length,
+    },
+  };
+}
+
+async function getRosterTeamNames(leagueId: string): Promise<Map<number, string>> {
+  const [rosters, users] = await Promise.all([
+    sleeperGet<SleeperRoster[]>(`/league/${leagueId}/rosters`),
+    sleeperGet<SleeperLeagueUser[]>(`/league/${leagueId}/users`),
+  ]);
+  const userNameByOwnerId = new Map(users.map((u) => [u.user_id, u.display_name]));
+  return new Map(
+    rosters.map((r) => [r.roster_id, userNameByOwnerId.get(r.owner_id) ?? `Team ${r.roster_id}`]),
+  );
+}
+
+interface SleeperTransaction {
+  transaction_id: string;
+  type: string;
+  status: string;
+  created: number;
+  adds: Record<string, number> | null;
+  drops: Record<string, number> | null;
+}
+
+// Sleeper's transactions endpoint is keyed by "round" (week), not a flat feed — pull the
+// current week plus the two before it (recent activity is what a dashboard cares about)
+// and merge, rather than fetching all 18 weeks for a list that only shows the last 15 anyway.
+export async function getLeagueTransactions(leagueId: string, limit = 15): Promise<LeagueTransaction[]> {
+  const state = await sleeperGet<{ week: number }>("/state/nfl");
+  const currentWeek = Math.max(1, state.week || 1);
+  const weeks = [currentWeek, currentWeek - 1, currentWeek - 2].filter((w) => w >= 1);
+
+  const [weeklyResults, playersMap, rosterNames] = await Promise.all([
+    Promise.all(
+      weeks.map((week) =>
+        sleeperGet<SleeperTransaction[]>(`/league/${leagueId}/transactions/${week}`).catch(() => []),
+      ),
+    ),
+    getPlayersMap(),
+    getRosterTeamNames(leagueId),
+  ]);
+
+  const all = weeklyResults.flat().filter((t) => t.status === "complete");
+  all.sort((a, b) => b.created - a.created);
+
+  function toRefs(entries: Record<string, number> | null): { playerId: string; playerName: string; teamName: string }[] {
+    if (!entries) return [];
+    return Object.entries(entries).map(([playerId, rosterId]) => ({
+      playerId,
+      playerName: playerName(playerId, playersMap[playerId]),
+      teamName: rosterNames.get(rosterId) ?? `Team ${rosterId}`,
+    }));
+  }
+
+  return all.slice(0, limit).map((t) => ({
+    id: t.transaction_id,
+    type: t.type,
+    createdAt: t.created,
+    adds: toRefs(t.adds),
+    drops: toRefs(t.drops),
+  }));
+}
+
+interface SleeperDraftMeta {
+  draft_id: string;
+  status: string;
+  settings: { rounds?: number; teams?: number };
+}
+
+interface SleeperDraftPick {
+  round: number;
+  pick_no: number;
+  roster_id: number;
+  player_id: string;
+  draft_slot: number;
+}
+
+function draftStatusFrom(status: string): LeagueDraft["status"] {
+  if (status === "complete") return "complete";
+  if (status === "drafting" || status === "paused") return "in_progress";
+  return "not_started";
+}
+
+export async function getLeagueDraft(leagueId: string): Promise<LeagueDraft> {
+  const drafts = await sleeperGet<SleeperDraftMeta[]>(`/league/${leagueId}/drafts`);
+  const draft = drafts[0];
+  if (!draft) {
+    return { status: "not_started", numTeams: 0, rounds: 0, picks: [] };
+  }
+
+  const [picks, playersMap, rosterNames] = await Promise.all([
+    sleeperGet<SleeperDraftPick[]>(`/draft/${draft.draft_id}/picks`),
+    getPlayersMap(),
+    getRosterTeamNames(leagueId),
+  ]);
+
+  const draftPicks: LeagueDraftPick[] = picks.map((p) => {
+    const meta = playersMap[p.player_id];
+    return {
+      round: p.round,
+      pickNo: p.pick_no,
+      teamIndex: p.draft_slot - 1,
+      teamName: rosterNames.get(p.roster_id) ?? `Team ${p.roster_id}`,
+      playerId: p.player_id,
+      playerName: playerName(p.player_id, meta),
+      playerPosition: meta?.position ?? "UNK",
+    };
+  });
+
+  return {
+    status: draftStatusFrom(draft.status),
+    numTeams: draft.settings?.teams ?? rosterNames.size,
+    rounds: draft.settings?.rounds ?? Math.max(0, ...draftPicks.map((p) => p.round)),
+    picks: draftPicks,
   };
 }

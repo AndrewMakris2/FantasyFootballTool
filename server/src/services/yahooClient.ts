@@ -1,4 +1,13 @@
-import type { League, Matchup, Player, TeamRoster, TeamStanding } from "../types/league.js";
+import type {
+  League,
+  LeagueDraft,
+  LeagueSettings,
+  LeagueTransaction,
+  Matchup,
+  Player,
+  TeamRoster,
+  TeamStanding,
+} from "../types/league.js";
 import { getYahooTokens, setYahooTokens, type YahooTokens } from "../store/db.js";
 
 const AUTH_URL = "https://api.login.yahoo.com/oauth2/request_auth";
@@ -130,11 +139,15 @@ function parseTeamRoster(teamWrapper: any): Player[] {
     const position = playerMeta.find((e: any) => e && e.display_position)?.display_position;
     const team = playerMeta.find((e: any) => e && e.editorial_team_abbr)?.editorial_team_abbr;
     const playerKey = playerMeta.find((e: any) => e && e.player_key)?.player_key;
+    // Yahoo surfaces injury designations (Q/O/IR/etc.) as a top-level `status` field on
+    // the player node, same array-of-single-key-objects shape as name/position/team above.
+    const injuryStatus = playerMeta.find((e: any) => e && e.status)?.status ?? null;
     roster.push({
       playerId: playerKey ?? name ?? "unknown",
       name: name ?? "Unknown Player",
       position: position ?? "UNK",
       team: team ?? null,
+      injuryStatus,
     });
   }
   return roster;
@@ -223,6 +236,18 @@ export async function getLeagueDetail(leagueKey: string): Promise<League> {
 
   const currentMatchup: Matchup | null = null; // Deferred: Yahoo matchup parsing follows the same nested-array pattern.
 
+  // Best-effort: scoring_type/num_teams are top-level fields on Yahoo's base league
+  // resource. Roster position counts and playoff team count live under the `settings`
+  // sub-resource we requested (`out=settings`), but its nested shape isn't verified
+  // against a live league yet, so those two are left empty/null rather than risk a
+  // wrong parse — same "degrade instead of guess" approach used for currentMatchup above.
+  const settings: LeagueSettings = {
+    scoringType: typeof leagueMeta.scoring_type === "string" ? leagueMeta.scoring_type : "unknown",
+    rosterPositions: [],
+    playoffTeams: null,
+    totalRosters: Number(leagueMeta.num_teams ?? teams.length),
+  };
+
   return {
     platform: "yahoo",
     leagueId: leagueKey,
@@ -237,5 +262,18 @@ export async function getLeagueDetail(leagueKey: string): Promise<League> {
     teams,
     standings,
     currentMatchup,
+    settings,
   };
+}
+
+// Yahoo's transactions and draftresults resources use the same deeply-nested,
+// index-keyed JSON shape as everything else here, but without a live league to verify
+// the exact structure against, a wrong parse is worse than an honest "not available yet" —
+// same call the currentMatchup field above already makes.
+export async function getLeagueTransactions(_leagueKey: string): Promise<LeagueTransaction[]> {
+  return [];
+}
+
+export async function getLeagueDraft(_leagueKey: string): Promise<LeagueDraft> {
+  return { status: "not_started", numTeams: 0, rounds: 0, picks: [] };
 }

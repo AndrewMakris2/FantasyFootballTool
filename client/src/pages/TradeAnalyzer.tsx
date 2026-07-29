@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getLeagueDetail, getLeagues } from "../api/leagues";
 import { getPlayers } from "../api/players";
@@ -12,9 +13,10 @@ import type { TradeValueEntry } from "../types/tradeValue";
 type Mode = "freeform" | "league";
 
 export function TradeAnalyzer() {
-  const [mode, setMode] = useState<Mode>("freeform");
+  const [searchParams] = useSearchParams();
+  const [mode, setMode] = useState<Mode>(() => (searchParams.get("league") ? "league" : "freeform"));
   const [dynasty, setDynasty] = useState(false);
-  const [leagueKey, setLeagueKey] = useState("");
+  const [leagueKey, setLeagueKey] = useState(() => searchParams.get("league") ?? "");
   const [teamAId, setTeamAId] = useState("");
   const [teamBId, setTeamBId] = useState("");
   const [freeformA, setFreeformA] = useState<TradeCandidate[]>([]);
@@ -38,6 +40,18 @@ export function TradeAnalyzer() {
     queryFn: () => getLeagueDetail(platform!, leagueId!),
     enabled: mode === "league" && Boolean(platform && leagueId),
   });
+
+  // Deep-linked from a League Detail page (?league=...&team=...) — wait for the league's
+  // teams to load before presetting Team A, since we're validating the id is actually
+  // one of this league's teams rather than trusting the URL blindly.
+  useEffect(() => {
+    const teamParam = searchParams.get("team");
+    if (!teamParam || teamAId || !leagueDetail) return;
+    if (leagueDetail.teams.some((t) => t.teamId === teamParam)) {
+      setTeamAId(teamParam);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leagueDetail]);
 
   const pickAssets = useMemo(() => generateDraftPickAssets(), []);
   const pickCandidates: TradeCandidate[] = useMemo(

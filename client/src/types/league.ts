@@ -5,6 +5,8 @@ export interface Player {
   name: string;
   position: string;
   team: string | null;
+  slot?: string;
+  injuryStatus?: string | null;
 }
 
 export interface TeamRecord {
@@ -35,6 +37,13 @@ export interface TeamRoster {
   roster: Player[];
 }
 
+export interface LeagueSettings {
+  scoringType: string;
+  rosterPositions: string[];
+  playoffTeams: number | null;
+  totalRosters: number;
+}
+
 export interface League {
   platform: Platform;
   leagueId: string;
@@ -49,6 +58,7 @@ export interface League {
   teams: TeamRoster[];
   standings: TeamStanding[];
   currentMatchup: Matchup | null;
+  settings: LeagueSettings;
 }
 
 export interface LeagueSummary {
@@ -58,4 +68,37 @@ export interface LeagueSummary {
   season: string;
   teamName: string;
   record: TeamRecord;
+}
+
+export interface TransactionPlayerRef {
+  playerId: string;
+  playerName: string;
+  teamName: string;
+}
+
+export interface LeagueTransaction {
+  id: string;
+  type: string;
+  createdAt: number;
+  adds: TransactionPlayerRef[];
+  drops: TransactionPlayerRef[];
+}
+
+export interface LeagueDraftPick {
+  round: number;
+  pickNo: number;
+  teamIndex: number;
+  teamName: string;
+  playerId: string;
+  playerName: string;
+  playerPosition: string;
+}
+
+export type LeagueDraftStatus = "not_started" | "in_progress" | "complete";
+
+export interface LeagueDraft {
+  status: LeagueDraftStatus;
+  numTeams: number;
+  rounds: number;
+  picks: LeagueDraftPick[];
 }
